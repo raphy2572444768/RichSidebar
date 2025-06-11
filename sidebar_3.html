@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>APPNAME per DOMAIN Dashboard (Fully Integrated Sidebar Header)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 220px;
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            transition: width 0.3s ease-in-out, padding 0.3s ease-in-out;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            /* No need for position: relative here anymore as toggle-btn is not absolute */
+        }
+
+        #sidebar.hidden {
+            width: 60px;
+            padding: 20px 10px;
+        }
+
+        /* Sidebar Header (new container for title and toggle button) */
+        .sidebar-header {
+            display: flex; /* Use flexbox to align title and button */
+            justify-content: space-between; /* Pushes title to left, button to right */
+            align-items: center; /* Vertically centers them */
+			/*padding: 10px 15px;*/
+            margin-bottom: 20px; /* Space below the header */
+            transition: margin-bottom 0.3s ease-in-out; /* Animate margin for collapse */
+            padding-right: 5px; /* Small padding to prevent button from touching edge */
+        }
+
+        #sidebar.hidden .sidebar-header {
+            margin-bottom: 10px; /* Less margin when minimized */
+            justify-content: center; /* Temporarily center just the button when title disappears */
+            padding-right: 0; /* Remove extra padding when collapsed */
+        }
+        
+        /* This rule re-aligns the single button to the right once title is completely gone */
+        #sidebar.hidden .sidebar-header .toggle-btn {
+             margin-left: auto; /* Push button to the right in the hidden state */
+        }
+
+
+        /* Sidebar Menu Title */
+        .sidebar-header h3 {
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-width 0.3s ease-in-out;
+            max-width: 100px; /* Initial max-width for title */
+            opacity: 1;
+            margin: 0; /* Important: remove default h3 margins for flex alignment */
+            flex-shrink: 1; /* Allow title to shrink if needed (before max-width takes over) */
+            flex-grow: 1; /* Allow title to take available space */
+            text-align: left; /* Ensure text is left-aligned */
+            padding-left: 5px; /* Small padding from left edge */
+        }
+
+        #sidebar.hidden .sidebar-header h3 {
+            opacity: 0;
+            max-width: 0; /* Shrink title width */
+            padding-left: 0; /* Remove padding when title is hidden */
+        }
+
+        /* Toggle Button */
+        .toggle-btn {
+            /* No more position: absolute */
+            background: none; /* Make background transparent */
+            color: white;
+            border: none;
+            padding: 8px; /* Slightly larger clickable area */
+            cursor: pointer;
+            border-radius: 10%; /* Make it round */
+            font-size: 1.2em; /* Make the icon slightly larger */
+            display: flex; /* Use flex for centering the icon */
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease-in-out, background-color 0.2s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+            /* Add some hover effect */
+        }
+        .toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+        }
+        
+        /* Rotate toggle button when sidebar is hidden */
+        .toggle-btn.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar Menu Items */
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            /* No need for large top padding, sidebar-header handles spacing */
+        }
+
+        #sidebar .nav-item {
+            margin-bottom: 10px;
+        }
+
+        #sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+
+        #sidebar .nav-link:hover {
+            background-color: #495057;
+        }
+
+        .sidebar-icon {
+            font-size: 1.2em;
+            transition: margin-right 0.3s ease-in-out;
+        }
+
+        .sidebar-link-text {
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-width 0.3s ease-in-out;
+            max-width: 150px;
+            opacity: 1;
+        }
+
+        #sidebar.hidden .sidebar-link-text {
+            opacity: 0;
+            max-width: 0;
+            pointer-events: none;
+        }
+
+        #sidebar.hidden .sidebar-icon {
+            margin-right: 0;
+        }
+
+        /* Main content */
+        #main {
+            flex: 1;
+            margin-left: 220px; /* Initial margin to account for sidebar width */
+            padding: 20px;
+            background: #f8f9fa;
+            transition: margin-left 0.3s ease-in-out;
+            z-index: 1;
+        }
+
+        #main.shifted {
+            margin-left: 60px; /* Adjusted margin for minimized sidebar */
+        }
+        
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+        }
+
+        .clear-btn-inline {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }		
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+			<h3>GRAS</h3>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <ul class="nav flex-column">	
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">📊</span> <span class="sidebar-link-text">G3</span>
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">📈</span> <span class="sidebar-link-text">Reports</span>
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">⚙️</span> <span class="sidebar-link-text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="main">
+        <h1>G3 Dashboard</h1>
+
+        <h3>APPNAME Distribution per DOMAIN</h3>
+        <div class="chart-container">
+            <canvas id="domainChart"></canvas>
+        </div>
+
+        <hr/>
+
+        <h3>APPNAME Count per DOMAIN</h3>
+        <table id="domainTable" class="display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>DOMAIN</th>
+                    <th>APPNAME</th>
+                    <th>Occurrences</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <!--div style="height: 800px; background-color: #e9ecef; padding: 20px; margin-top: 20px;">
+            <p>Scroll down to see the fixed sidebar and toggle button in action.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>This section is added to ensure there's enough content to scroll the page. This helps in demonstrating that the sidebar and toggle button remain fixed while the main content scrolls.</p>
+            <p>Another paragraph to add more scrollable content. Ensure your browser window is not too large so that scrolling is necessary.</p>
+            <p>Final paragraph for testing purposes. The dashboard elements above this section will be fixed if the sidebar is also fixed.</p-->
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detailsModalLabel">APPNAME Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="modalBodyContent" style="overflow-x:auto;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // Example static JSON data
+    const fullData = [
+        { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+        { DOMAIN: 'Finance', APPNAME: 'App2', OWNER: 'Anna', VERSION: '2.1', DEPT: 'F2' },
+        { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+        { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+        { DOMAIN: 'HR', APPNAME: 'App4', OWNER: 'Sara', VERSION: '2.0', DEPT: 'H2' },
+        { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+    ];
+
+    let domainAppMap = {};
+
+    function processData(data) {
+        // Group data DOMAIN → APPNAME → count
+        domainAppMap = {};
+        data.forEach(row => {
+            const domain = row.DOMAIN;
+            const appname = row.APPNAME;
+            if (domain && appname) {
+                if (!domainAppMap[domain]) domainAppMap[domain] = {};
+                if (!domainAppMap[domain][appname]) domainAppMap[domain][appname] = 0;
+                domainAppMap[domain][appname]++;
+            }
+        });
+
+        // Update chart
+        const chartLabels = Object.keys(domainAppMap);
+        const chartData = chartLabels.map(domain => {
+            return Object.values(domainAppMap[domain]).reduce((sum, val) => sum + val, 0);
+        });
+
+        if (window.domainChart && typeof window.domainChart.destroy === 'function') {
+            window.domainChart.destroy();
+        }
+
+        const ctx = document.getElementById('domainChart').getContext('2d');
+        window.domainChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: '# of APPNAMEs',
+                    data: chartData,
+                    backgroundColor: chartLabels.map(() => `hsl(${Math.random()*360}, 70%, 70%)`),
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed;
+                            }
+                        }
+                    }
+                },
+                onClick: function(evt, elements) {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const selectedDomain = chartLabels[index];
+                        showDetailsModal(selectedDomain, null);
+                    }
+                }
+            }
+        });
+
+        // Populate DataTable
+        const tableData = [];
+        Object.keys(domainAppMap).forEach(domain => {
+            Object.keys(domainAppMap[domain]).forEach(appname => {
+                const count = domainAppMap[domain][appname];
+                tableData.push([
+                    domain,
+                    appname,
+                    `<a href="#" class="show-details" data-domain="${domain}" data-appname="${appname}">${count}</a>`
+                ]);
+            });
+        });
+
+        if ($.fn.DataTable.isDataTable('#domainTable')) {
+            $('#domainTable').DataTable().clear().rows.add(tableData).draw();
+        } else {
+            $('#domainTable').DataTable({
+                data: tableData,
+                columns: [
+                    { title: "DOMAIN" },
+                    { title: "APPNAME" },
+                    { title: "Occurrences", orderable: true }
+                ],
+                pageLength: 10,
+                dom: 'lfBtip',
+                initComplete: function() {
+                    $('.dataTables_filter').append('<button class="clear-btn-inline" onclick="clearTableFilter()">Clear Filter</button>');
+                }
+            });
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const main = document.getElementById('main');
+        const toggleBtn = document.querySelector('.toggle-btn');
+        const sidebarTitle = document.querySelector('.sidebar-header h3'); // Select title within new header
+
+        sidebar.classList.toggle('hidden');
+        main.classList.toggle('shifted');
+        toggleBtn.classList.toggle('rotated');
+        sidebarTitle.classList.toggle('hidden');
+    }
+
+    function clearTableFilter() {
+        $('#domainTable').DataTable().search('').draw();
+    }
+
+    function showDetailsModal(domain, appname) {
+        let filteredRows;
+        let title;
+
+        if (appname) {
+            filteredRows = fullData.filter(row => row.DOMAIN === domain && row.APPNAME === appname);
+            title = `Details for DOMAIN: ${domain}, APPNAME: ${appname}`;
+        } else {
+            filteredRows = fullData.filter(row => row.DOMAIN === domain);
+            title = `Details for DOMAIN: ${domain}`;
+        }
+
+        if (filteredRows.length === 0) {
+            $('#modalBodyContent').html('<p>No records found.</p>');
+        } else {
+            const columns = Object.keys(filteredRows[0]);
+            let html = '<table class="table table-bordered table-sm"><thead><tr>';
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            filteredRows.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    html += `<td>${row[col]}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            $('#modalBodyContent').html(html);
+        }
+
+        $('#detailsModalLabel').text(title);
+        const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        modal.show();
+    }
+
+    // Initial call to render the dashboard
+    processData(fullData);
+
+    // Handle Occurrences click → show full modal
+    $(document).on('click', '.show-details', function(e) {
+        e.preventDefault();
+        const domain = $(this).data('domain');
+        const appname = $(this).data('appname');
+        showDetailsModal(domain, appname);
+    });
+    </script>
+
+</body>
+</html>

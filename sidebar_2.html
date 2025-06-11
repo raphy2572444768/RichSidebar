@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Sidebar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            transition: all 0.4s ease;
+        }
+        
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            height: 100vh;
+            padding: 20px 0;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s ease;
+            z-index: 100;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center;
+        }
+        
+        .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            margin-right: 15px;
+        }
+        
+        .logo i {
+            color: #fdbb2d;
+        }
+        
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+        
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(180deg);
+        }
+        
+        .sidebar.collapsed .toggle-btn {
+            transform: rotate(180deg);
+        }
+        
+        .sidebar.collapsed .toggle-btn:hover {
+            transform: rotate(0deg);
+        }
+        
+        .menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            border-left: 4px solid #fdbb2d;
+        }
+        
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: #fdbb2d;
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+        
+        .menu-item:hover::before {
+            transform: translateX(0);
+        }
+        
+        /* Main content styling */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            transition: all 0.4s ease;
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .page-title {
+            color: white;
+            font-size: 32px;
+            font-weight: 600;
+        }
+        
+        .mobile-toggle-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            min-height: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            color: white;
+        }
+        
+        .content-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #fdbb2d;
+        }
+        
+        .content-text {
+            font-size: 18px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .grid-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .grid-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .grid-item i {
+            font-size: 40px;
+            color: #fdbb2d;
+            margin-bottom: 15px;
+        }
+        
+        .grid-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+            }
+            
+            .sidebar.collapsed {
+                left: 0;
+                width: 70px;
+            }
+            
+            .sidebar.active {
+                left: 0;
+                width: 250px;
+            }
+            
+            .mobile-toggle-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-laptop-code"></i>
+                    <span class="logo-text">MenuPanel</span>
+                </div>
+                <button class="toggle-btn" id="toggleBtn">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+            </div>
+            
+            <div class="menu">
+                <a href="#" class="menu-item active" data-content="menu1">
+                    <i class="fas fa-home"></i>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" data-content="menu2">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-text">Analytics</span>
+                </a>
+                <a href="#" class="menu-item" data-content="menu3">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="menu-text">Products</span>
+                </a>
+                <a href="#" class="menu-item" data-content="menu4">
+                    <i class="fas fa-users"></i>
+                    <span class="menu-text">Customers</span>
+                </a>
+                <a href="#" class="menu-item" data-content="menu5">
+                    <i class="fas fa-cog"></i>
+                    <span class="menu-text">Settings</span>
+                </a>
+                <a href="#" class="menu-item" data-content="menu6">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="menu-text">Support</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <button class="mobile-toggle-btn" id="mobileToggleBtn">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
+            </div>
+            
+            <div class="content-card">
+                <div id="contentDisplay">
+                    <!-- Content will be loaded here based on menu selection -->
+                    <h2 class="content-title">Welcome to Dashboard</h2>
+                    <p class="content-text">
+                        This is your central hub for managing all aspects of your application. 
+                        Select a menu item from the sidebar to view specific sections and manage your content.
+                    </p>
+                    <p class="content-text">
+                        The sidebar can be collapsed to provide more screen space for your content. 
+                        On mobile devices, use the menu button to toggle the sidebar visibility.
+                    </p>
+                    
+                    <div class="content-grid">
+                        <div class="grid-item">
+                            <i class="fas fa-user-plus"></i>
+                            <h3 class="grid-title">New Users</h3>
+                            <p>24 in the last week</p>
+                        </div>
+                        <div class="grid-item">
+                            <i class="fas fa-shopping-bag"></i>
+                            <h3 class="grid-title">Orders</h3>
+                            <p>42 completed today</p>
+                        </div>
+                        <div class="grid-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <h3 class="grid-title">Performance</h3>
+                            <p>98% uptime</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleBtn');
+            const mobileToggleBtn = document.getElementById('mobileToggleBtn');
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentDisplay = document.getElementById('contentDisplay');
+            
+            // Toggle sidebar on desktop
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+            });
+            
+            // Toggle sidebar on mobile
+            mobileToggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Menu item click event
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Get content type
+                    const contentType = this.getAttribute('data-content');
+                    
+                    // Update content based on selection
+                    updateContent(contentType);
+                    
+                    // Close sidebar on mobile after selection
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Function to update content
+            function updateContent(type) {
+                const titles = {
+                    menu1: "Dashboard Overview",
+                    menu2: "Analytics & Reports",
+                    menu3: "Product Management",
+                    menu4: "Customer Insights",
+                    menu5: "System Settings",
+                    menu6: "Help & Support"
+                };
+                
+                const contents = {
+                    menu1: `<h2 class="content-title">Dashboard Overview</h2>
+                            <p class="content-text">Welcome to your dashboard. Here you can monitor key metrics and quickly access important areas of the application.</p>
+                            <p class="content-text">Currently you have <strong>12 pending tasks</strong>, <strong>5 new messages</strong>, and <strong>3 upcoming events</strong>.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-tasks"></i>
+                                    <h3 class="grid-title">Tasks</h3>
+                                    <p>12 pending</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-bell"></i>
+                                    <h3 class="grid-title">Notifications</h3>
+                                    <p>5 unread</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <h3 class="grid-title">Events</h3>
+                                    <p>3 upcoming</p>
+                                </div>
+                            </div>`,
+                    
+                    menu2: `<h2 class="content-title">Analytics & Reports</h2>
+                            <p class="content-text">Comprehensive analytics to help you understand your business performance and make data-driven decisions.</p>
+                            <p class="content-text">Your conversion rate increased by <strong>15%</strong> in the last quarter, and customer acquisition cost decreased by <strong>8%</strong>.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <h3 class="grid-title">Revenue</h3>
+                                    <p>$42.8K this month</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-user-friends"></i>
+                                    <h3 class="grid-title">Visitors</h3>
+                                    <p>24.5K this week</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-percentage"></i>
+                                    <h3 class="grid-title">Conversion</h3>
+                                    <p>3.2% rate</p>
+                                </div>
+                            </div>`,
+                    
+                    menu3: `<h2 class="content-title">Product Management</h2>
+                            <p class="content-text">Manage your product inventory, add new items, update existing products, and track stock levels.</p>
+                            <p class="content-text">You currently have <strong>24 products</strong> in your catalog. <strong>5 products</strong> are running low on stock.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-box-open"></i>
+                                    <h3 class="grid-title">Total Products</h3>
+                                    <p>24 items</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <h3 class="grid-title">Low Stock</h3>
+                                    <p>5 products</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-tags"></i>
+                                    <h3 class="grid-title">Categories</h3>
+                                    <p>8 categories</p>
+                                </div>
+                            </div>`,
+                    
+                    menu4: `<h2 class="content-title">Customer Insights</h2>
+                            <p class="content-text">View detailed customer information, track engagement, and analyze purchasing patterns.</p>
+                            <p class="content-text">Your customer base has grown by <strong>18%</strong> in the last month. The average customer lifetime value is <strong>$425</strong>.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-users"></i>
+                                    <h3 class="grid-title">Total Customers</h3>
+                                    <p>2,458 accounts</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-user-plus"></i>
+                                    <h3 class="grid-title">New This Month</h3>
+                                    <p>184 customers</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-star"></i>
+                                    <h3 class="grid-title">Satisfaction</h3>
+                                    <p>92% positive</p>
+                                </div>
+                            </div>`,
+                    
+                    menu5: `<h2 class="content-title">System Settings</h2>
+                            <p class="content-text">Configure your application preferences, manage user roles, and set up integrations with other services.</p>
+                            <p class="content-text">Current system status: <strong style="color:#4CAF50;">All systems operational</strong>. Last backup: <strong>Today, 02:30 AM</strong>.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-user-shield"></i>
+                                    <h3 class="grid-title">Security</h3>
+                                    <p>Configure settings</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-plug"></i>
+                                    <h3 class="grid-title">Integrations</h3>
+                                    <p>Connect services</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-users-cog"></i>
+                                    <h3 class="grid-title">User Roles</h3>
+                                    <p>Manage permissions</p>
+                                </div>
+                            </div>`,
+                    
+                    menu6: `<h2 class="content-title">Help & Support</h2>
+                            <p class="content-text">Find answers to common questions, access documentation, or contact our support team for assistance.</p>
+                            <p class="content-text">Our average response time is <strong>under 2 hours</strong> during business hours. Check our knowledge base for quick solutions.</p>
+                            
+                            <div class="content-grid">
+                                <div class="grid-item">
+                                    <i class="fas fa-book"></i>
+                                    <h3 class="grid-title">Documentation</h3>
+                                    <p>Guides & tutorials</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-comments"></i>
+                                    <h3 class="grid-title">Live Chat</h3>
+                                    <p>24/7 available</p>
+                                </div>
+                                <div class="grid-item">
+                                    <i class="fas fa-phone-alt"></i>
+                                    <h3 class="grid-title">Contact Us</h3>
+                                    <p>+1 (800) 123-4567</p>
+                                </div>
+                            </div>`
+                };
+                
+                // Update page title
+                document.querySelector('.page-title').textContent = titles[type];
+                
+                // Update content
+                contentDisplay.innerHTML = contents[type];
+            }
+        });
+    </script>
+</body>
+</html>

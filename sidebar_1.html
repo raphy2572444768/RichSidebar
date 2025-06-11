@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Sidebar</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for smooth transitions and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is open/closed */
+        }
+
+        /* Define the sidebar's default width and collapsed width */
+        .sidebar-expanded {
+            width: 250px;
+        }
+
+        .sidebar-collapsed {
+            width: 0;
+            overflow: hidden; /* Hide content when collapsed */
+        }
+
+        /* Define the content area's margin for responsiveness */
+        /*.content-expanded {
+            margin-left: 250px;
+        }*/
+
+        .content-collapsed {
+            margin-left: 0;
+        }
+
+        /* Transition properties for smooth animation */
+        .transition-all-300 {
+            transition-property: all;
+            transition-duration: 300ms;
+            transition-timing-function: ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen bg-gray-100">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar-expanded bg-gradient-to-br from-indigo-700 to-purple-700 text-white shadow-lg flex-shrink-0 transition-all-300 relative rounded-r-lg">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-8 text-center">App Menu</h2>
+            <nav>
+                <ul>
+                    <li class="mb-4">
+                        <a href="#menu1" class="flex items-center p-3 rounded-lg hover:bg-white hover:text-indigo-700 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+                            Menu 1
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#menu2" class="flex items-center p-3 rounded-lg hover:bg-white hover:text-indigo-700 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM14 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1z"></path></svg>
+                            Menu 2
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#menu3" class="flex items-center p-3 rounded-lg hover:bg-white hover:text-indigo-700 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM12 11a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z"></path></svg>
+                            Menu 3
+                        </a>
+                    </li>
+                    <li class="mb-4">
+                        <a href="#menu4" class="flex items-center p-3 rounded-lg hover:bg-white hover:text-indigo-700 transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            Menu 4
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <!-- Toggle button inside the sidebar for small screens or when sidebar is narrow -->
+        <button id="sidebarToggleInternal" class="absolute top-4 right-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 lg:hidden">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="mainContent" class="flex-1 p-8 md:p-12 transition-all-300 content-expanded">
+        <!-- Toggle button for larger screens or when sidebar is collapsed externally -->
+        <button id="sidebarToggle" class="fixed top-4 left-4 z-20 p-2 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+
+        <section id="menu1" class="bg-white p-8 rounded-lg shadow-md mb-8">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-4">Menu 1 Content</h3>
+            <p class="text-gray-600">This is the content for Menu 1. It can contain any information, text, images, or other elements specific to this section of your application. Feel free to expand on this!</p>
+            <p class="text-gray-600 mt-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+
+        <section id="menu2" class="bg-white p-8 rounded-lg shadow-md mb-8 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-4">Menu 2 Content</h3>
+            <p class="text-gray-600">Here you'll find the details for Menu 2. This section is perfect for displaying data, forms, or interactive components related to Menu 2's purpose.</p>
+            <p class="text-gray-600 mt-4">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        </section>
+
+        <section id="menu3" class="bg-white p-8 rounded-lg shadow-md mb-8 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-4">Menu 3 Content</h3>
+            <p class="text-gray-600">Content for Menu 3. You can customize this content to be as rich or as simple as needed. Perhaps a gallery or a contact form could go here.</p>
+            <p class="text-gray-600 mt-4">Curabitur pretium tincidunt lacus. Nulla facilisi. Donec lacinia eleifend ligula. Aliquam interdum lorem eu dolor. Suspendisse semper non elit a scelerisque. </p>
+        </section>
+
+        <section id="menu4" class="bg-white p-8 rounded-lg shadow-md mb-8 hidden">
+            <h3 class="text-3xl font-semibold text-gray-800 mb-4">Menu 4 Content</h3>
+            <p class="text-gray-600">This is the final content section for Menu 4. Think of what information or functionality would be most useful here for your users.</p>
+            <p class="text-gray-600 mt-4">Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vivamus in erat eu urna feugiat pellentesque. Fusce et ipsum ac ipsum convallis imperdiet.</p>
+        </section>
+    </main>
+
+    <script>
+        // Get references to DOM elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarToggleInternal = document.getElementById('sidebarToggleInternal');
+        const menuLinks = document.querySelectorAll('#sidebar a');
+        const contentSections = document.querySelectorAll('main section');
+
+        // Function to toggle the sidebar's state
+        function toggleSidebar() {
+            // Toggle classes for sidebar width
+            sidebar.classList.toggle('sidebar-expanded');
+            sidebar.classList.toggle('sidebar-collapsed');
+
+            // Toggle classes for main content margin to push/pull content
+            mainContent.classList.toggle('content-expanded');
+            mainContent.classList.toggle('content-collapsed');
+
+            // Optionally, change the icon of the toggle button based on sidebar state
+            const toggleIcon = sidebarToggle.querySelector('svg');
+            const toggleIconInternal = sidebarToggleInternal.querySelector('svg');
+
+            if (sidebar.classList.contains('sidebar-collapsed')) {
+                // If collapsed, show the menu icon (hamburger)
+                toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+                toggleIconInternal.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+            } else {
+                // If expanded, show the close icon (X)
+                toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+                toggleIconInternal.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+            }
+        }
+
+        // Add event listeners to the toggle buttons
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarToggleInternal.addEventListener('click', toggleSidebar);
+
+
+        // Function to show/hide content sections based on the clicked menu item
+        function showContent(sectionId) {
+            // Hide all content sections first
+            contentSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Show the selected content section
+            const selectedSection = document.getElementById(sectionId);
+            if (selectedSection) {
+                selectedSection.classList.remove('hidden');
+            }
+
+            // Remove 'active' class from all links
+            menuLinks.forEach(link => {
+                link.classList.remove('bg-white', 'text-indigo-700');
+            });
+
+            // Add 'active' class to the clicked link
+            const activeLink = document.querySelector(`a[href="#${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('bg-white', 'text-indigo-700');
+            }
+        }
+
+        // Add click listeners to sidebar menu links
+        menuLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default anchor link behavior
+                const sectionId = this.getAttribute('href').substring(1); // Get section ID from href
+                showContent(sectionId);
+            });
+        });
+
+        // Initialize by showing the first menu's content and making its link active
+        window.onload = function() {
+            showContent('menu1');
+            document.querySelector('a[href="#menu1"]').classList.add('bg-white', 'text-indigo-700');
+
+            // Initial state for the toggle button based on default sidebar state
+            const toggleIcon = sidebarToggle.querySelector('svg');
+            const toggleIconInternal = sidebarToggleInternal.querySelector('svg');
+            if (sidebar.classList.contains('sidebar-expanded')) {
+                toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+                toggleIconInternal.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+            }
+        };
+
+        // Handle initial load and window resizing for responsiveness
+        function handleResize() {
+            if (window.innerWidth < 768) { // Assuming 'md' breakpoint in Tailwind is 768px
+                // On smaller screens, start with sidebar collapsed and internal button visible
+                if (sidebar.classList.contains('sidebar-expanded')) {
+                    toggleSidebar(); // Collapse if expanded
+                }
+                sidebarToggle.classList.add('hidden'); // Hide external toggle
+                sidebarToggleInternal.classList.remove('hidden'); // Show internal toggle
+            } else {
+                // On larger screens, start with sidebar expanded and external button visible
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    toggleSidebar(); // Expand if collapsed
+                }
+                sidebarToggle.classList.remove('hidden'); // Show external toggle
+                sidebarToggleInternal.classList.add('hidden'); // Hide internal toggle
+            }
+        }
+
+        // Initial call to handleResize on page load
+        handleResize();
+        // Add event listener for window resize
+        window.addEventListener('resize', handleResize);
+    </script>
+</body>
+</html>
