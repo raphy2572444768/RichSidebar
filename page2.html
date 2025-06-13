@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Details - {{ domain }} {% if appname %}- {{ appname }}{% endif %}</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <h2>Details for DOMAIN: {{ domain }}{% if appname %}, APPNAME: {{ appname }}{% endif %}</h2>
+
+    {% if records %}
+    <table id="detailsTable" class="display">
+        <thead>
+            <tr>
+                {% for key in records.0.keys %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+                <tr>
+                    {% for value in row.values %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No records found.</p>
+    {% endif %}
+
+    <a href="{% url 'dashboard' %}">← Back to Dashboard</a>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#detailsTable').DataTable({ pageLength: 25 });
+        });
+    </script>
+</body>
+</html>
