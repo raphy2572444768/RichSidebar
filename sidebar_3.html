@@ -440,6 +440,18 @@
     // Initial call to render the dashboard
     processData(fullData);
 
+
+	function showDetailsModal(domain, appname) {
+	    // Redirect to new page
+	    let url = `/domain-detail/?domain=${encodeURIComponent(domain)}`;
+	    if (appname) {
+	        url += `&appname=${encodeURIComponent(appname)}`;
+	    }
+	    window.location.href = url;
+	}
+
+
+
     // Handle Occurrences click → show full modal
     $(document).on('click', '.show-details', function(e) {
         e.preventDefault();
