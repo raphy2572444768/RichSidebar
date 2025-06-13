@@ -121,6 +121,22 @@ def filter_excel_sheet(excel_file, sheet_name, filter_column, filter_value):
     return filtered_data_json
 
 
+def domain_detail_view(request):
+    domain = request.GET.get('domain')
+    appname = request.GET.get('appname')
+
+    filtered = [row for row in SAMPLE_DATA if row['DOMAIN'] == domain]
+    if appname:
+        filtered = [row for row in filtered if row['APPNAME'] == appname]
+
+    return render(request, 'domain_detail.html', {
+        'records': filtered,
+        'domain': domain,
+        'appname': appname
+    })
+
+
+
 # Example usage
 if __name__ == "__main__":
     # Replace these with your actual file path, sheet name, and column name
