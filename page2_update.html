@@ -1,0 +1,85 @@
+<!DOCTYPE html> 
+<html>
+<head>
+    <title>Details - {{ domain }} {% if appname %}- {{ appname }}{% endif %}</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <style>
+        .d-none { display: none; }
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            margin: 2px;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Details for DOMAIN: {{ domain }}{% if appname %}, APPNAME: {{ appname }}{% endif %}</h2>
+
+    {% if records %}
+    <table id="detailsTable" class="display">
+        <thead>
+            <tr>
+                {% for key in records.0.keys %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+                <th>Comment</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in records %}
+                <tr>
+                    {% for value in row.values %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                    <td>
+                        <input type="text" id="comment-{{ forloop.counter0 }}" class="form-control" value="" disabled>
+                    </td>
+                    <td>
+                        <button class="btn-edit" onclick="enableComment('comment-{{ forloop.counter0 }}', this)">Edit</button>
+                        <button class="btn-save d-none" onclick="saveComment('comment-{{ forloop.counter0 }}', this)">Save</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No records found.</p>
+    {% endif %}
+
+    <br>
+    <a href="javascript:history.back()">← Back to Dashboard</a>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#detailsTable').DataTable({ pageLength: 25 });
+        });
+
+        function enableComment(inputId, editBtn) {
+            const input = document.getElementById(inputId);
+            input.disabled = false;
+
+            const saveBtn = editBtn.nextElementSibling;
+            editBtn.classList.add('d-none');
+            saveBtn.classList.remove('d-none');
+        }
+
+        function saveComment(inputId, saveBtn) {
+            const input = document.getElementById(inputId);
+            const comment = input.value;
+
+            input.disabled = true;
+            console.log("Saved comment:", comment); // Replace with AJAX if saving to backend
+
+            const editBtn = saveBtn.previousElementSibling;
+            saveBtn.classList.add('d-none');
+            editBtn.classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>
