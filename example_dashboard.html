@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>APPNAME per DOMAIN Dashboard (Fully Integrated Sidebar Header)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="static/css/style.css"> 
+</head>
+<body>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>EXAMPLE</h3>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <ul class="nav flex-column"> 
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">📊</span> <span class="sidebar-link-text">G3</span>
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">📈</span> <span class="sidebar-link-text">Reports</span>
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="#">
+                    <span class="sidebar-icon">⚙️</span> <span class="sidebar-link-text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="main">
+        <h1>G3 Dashboard</h1>
+
+        <h3>Occurrences per DOMAIN</h3>
+        <div class="chart-container">
+            <canvas id="domainChart"></canvas>
+        </div>
+
+        <h3>Occurrences per APPNAME</h3>
+        <div class="chart-container">
+            <canvas id="appnameChart"></canvas>
+        </div>
+
+        <h3>Statistics Summary</h3>
+        <div id="statisticsSection" class="mb-4"></div>
+
+        <hr/>
+
+        <h3>APPNAME Count per DOMAIN</h3>
+        <table id="domainTable" class="display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>DOMAIN</th>
+                    <th>APPNAME</th>
+                    <th>Occurrences</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    const fullData = [
+        { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+        { DOMAIN: 'Finance', APPNAME: 'App2', OWNER: 'Anna', VERSION: '2.1', DEPT: 'F2' },
+        { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+        { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+        { DOMAIN: 'HR', APPNAME: 'App4', OWNER: 'Sara', VERSION: '2.0', DEPT: 'H2' },
+        { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+        { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+        { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+    ];
+
+    function groupCounts(data, key) {
+        return data.reduce((acc, row) => {
+            const k = row[key];
+            acc[k] = (acc[k] || 0) + 1;
+            return acc;
+        }, {});
+    }
+
+    function renderBarChart(ctxId, label, counts) {
+        const ctx = document.getElementById(ctxId).getContext('2d');
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    label: `# of ${label}`,
+                    data: Object.values(counts),
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function renderStatistics(counts, label) {
+        const values = Object.values(counts);
+        const total = values.reduce((a, b) => a + b, 0);
+        const mean = (total / values.length).toFixed(2);
+        const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
+        const stdDev = Math.sqrt(variance).toFixed(2);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+
+        return `<h5>${label} Distribution:</h5>
+            <ul>
+                <li>Total: ${total}</li>
+                <li>Categories: ${values.length}</li>
+                <li>Mean: ${mean}</li>
+                <li>Standard Deviation: ${stdDev}</li>
+                <li>Min: ${min}</li>
+                <li>Max: ${max}</li>
+            </ul>`;
+    }
+
+    function processDashboardData() {
+        const domainCounts = groupCounts(fullData, 'DOMAIN');
+        const appnameCounts = groupCounts(fullData, 'APPNAME');
+
+        renderBarChart('domainChart', 'Apps per Domain', domainCounts);
+        renderBarChart('appnameChart', 'Occurrences per Appname', appnameCounts);
+
+        document.getElementById('statisticsSection').innerHTML =
+            renderStatistics(domainCounts, 'DOMAIN') +
+            renderStatistics(appnameCounts, 'APPNAME');
+
+        // Populate table
+        const domainAppMap = {};
+        fullData.forEach(row => {
+            if (!domainAppMap[row.DOMAIN]) domainAppMap[row.DOMAIN] = {};
+            if (!domainAppMap[row.DOMAIN][row.APPNAME]) domainAppMap[row.DOMAIN][row.APPNAME] = 0;
+            domainAppMap[row.DOMAIN][row.APPNAME]++;
+        });
+
+        const tableData = [];
+        for (let domain in domainAppMap) {
+            for (let app in domainAppMap[domain]) {
+                tableData.push([domain, app, domainAppMap[domain][app]]);
+            }
+        }
+
+        $('#domainTable').DataTable({
+            data: tableData,
+            columns: [
+                { title: "DOMAIN" },
+                { title: "APPNAME" },
+                { title: "Occurrences" }
+            ]
+        });
+    }
+
+    $(document).ready(function() {
+        processDashboardData();
+    });
+    </script>
+</body>
+</html>
