@@ -9,137 +9,227 @@
     <div class="container">
         <h2>Application Dashboard</h2>
 
-        <!-- 📌 Add the filter block right here -->
-        <div style="margin-bottom: 20px;">
-            <label for="columnFilter">Filter by:</label>
-            <select id="columnFilter">
-                <option value="">-- Select Column --</option>
-                <option value="DOMAIN">DOMAIN</option>
-                <option value="APPNAME">APPNAME</option>
-            </select>
+	<!-- Multi-column filter UI -->
+	<div class="mb-4">
+	    <label for="columnSelect">Select Columns to Filter:</label>
+	    <select id="columnSelect" multiple class="form-select" style="max-width: 300px;">
+	        <option value="DOMAIN">DOMAIN</option>
+	        <option value="APPNAME">APPNAME</option>
+	        <option value="OWNER">OWNER</option>
+	        <option value="DEPT">DEPT</option>
+	        <!-- Add more fields as needed -->
+	    </select>
+	    <div id="filterControls" class="row mt-3 g-2"></div>
+	</div>
 
-            <select id="valueFilter" style="display: none;">
-                <option value="">-- Select Value --</option>
-            </select>
-        </div>
 
         <!-- 📌 Your DataTable goes here -->
         <table id="domainTable" class="display" style="width:100%"></table>
 
     </div>
 
-    <script>
-			
-		let rawData = []; // Store original data for filtering
+<script>
+const fullData = [
+    { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+    { DOMAIN: 'Finance', APPNAME: 'App2', OWNER: 'Anna', VERSION: '2.1', DEPT: 'F2' },
+    { DOMAIN: 'Finance', APPNAME: 'App1', OWNER: 'John', VERSION: '1.0', DEPT: 'F1' },
+    { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+    { DOMAIN: 'HR', APPNAME: 'App4', OWNER: 'Sara', VERSION: '2.0', DEPT: 'H2' },
+    { DOMAIN: 'HR', APPNAME: 'App3', OWNER: 'Mike', VERSION: '1.3', DEPT: 'H1' },
+    { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+    { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+    { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+    { DOMAIN: 'IT', APPNAME: 'App5', OWNER: 'Tom', VERSION: '3.0', DEPT: 'I1' },
+    { DOMAIN: 'IT', APPNAME: 'App6', OWNER: 'Lisa', VERSION: '2.2', DEPT: 'I2' },
+];
 
-		// Load your JSON and store rawData
-		$.getJSON('/static/data/domain_app_data.json', function(data) {
-			rawData = data;
-			populateFilterOptions(data);
-			processData(data); // Load full table initially
-		});
+let domainAppMap = {};
+let filters = {};
 
-		// Populate second filter dropdown
-		function populateFilterOptions(data) {
-			const domainSet = new Set();
-			const appSet = new Set();
+function getFilteredData() {
+    return fullData.filter(row => {
+        return Object.entries(filters).every(([key, value]) => {
+            return row[key] === value;
+        });
+    });
+}
 
-			data.forEach(row => {
-				domainSet.add(row.DOMAIN);
-				appSet.add(row.APPNAME);
-			});
+function processData(data) {
+    domainAppMap = {};
+    data.forEach(row => {
+        const domain = row.DOMAIN;
+        const appname = row.APPNAME;
+        if (domain && appname) {
+            if (!domainAppMap[domain]) domainAppMap[domain] = {};
+            if (!domainAppMap[domain][appname]) domainAppMap[domain][appname] = 0;
+            domainAppMap[domain][appname]++;
+        }
+    });
 
-			$('#columnFilter').on('change', function () {
-				const selectedColumn = $(this).val();
-				const $valueFilter = $('#valueFilter');
-				$valueFilter.empty().append('<option value="">-- Select Value --</option>');
+    const chartLabels = Object.keys(domainAppMap);
+    const chartData = chartLabels.map(domain => {
+        return Object.values(domainAppMap[domain]).reduce((sum, val) => sum + val, 0);
+    });
 
-				if (selectedColumn === "DOMAIN") {
-					domainSet.forEach(val => $valueFilter.append(`<option value="${val}">${val}</option>`));
-				} else if (selectedColumn === "APPNAME") {
-					appSet.forEach(val => $valueFilter.append(`<option value="${val}">${val}</option>`));
-				}
+    if (window.domainChart && typeof window.domainChart.destroy === 'function') {
+        window.domainChart.destroy();
+    }
 
-				$valueFilter.show();
-			});
+    const ctx = document.getElementById('domainChart').getContext('2d');
+    window.domainChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: '# of APPNAMEs',
+                data: chartData,
+                backgroundColor: chartLabels.map(() => `hsl(${Math.random()*360}, 70%, 70%)`),
+                borderColor: '#fff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed;
+                        }
+                    }
+                }
+            },
+            onClick: function(evt, elements) {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const selectedDomain = chartLabels[index];
+                    showDetailsModal(selectedDomain, null);
+                }
+            }
+        }
+    });
 
-			$('#valueFilter').on('change', function () {
-				const column = $('#columnFilter').val();
-				const value = $(this).val();
-				const filteredData = value ? rawData.filter(row => row[column] === value) : rawData;
-				processData(filteredData);
-			});
-		}
-			
-	
-	
-	
-	
-	
-		function processData(data) {
-			const grouped = {};
-			data.forEach(row => {
-				const { DOMAIN, APPNAME } = row;
-				if (!grouped[DOMAIN]) grouped[DOMAIN] = {};
-				if (!grouped[DOMAIN][APPNAME]) grouped[DOMAIN][APPNAME] = 0;
-				grouped[DOMAIN][APPNAME]++;
-			});
+    const tableData = [];
+    Object.keys(domainAppMap).forEach(domain => {
+        Object.keys(domainAppMap[domain]).forEach(appname => {
+            const count = domainAppMap[domain][appname];
+            tableData.push([
+                domain,
+                appname,
+                `<a href="#" class="show-details" data-domain="${domain}" data-appname="${appname}">${count}</a>`
+            ]);
+        });
+    });
 
-			const tableData = [];
-			let grandTotal = 0;
+    if ($.fn.DataTable.isDataTable('#domainTable')) {
+        $('#domainTable').DataTable().clear().rows.add(tableData).draw();
+    } else {
+        $('#domainTable').DataTable({
+            data: tableData,
+            columns: [
+                { title: "DOMAIN" },
+                { title: "APPNAME" },
+                { title: "Occurrences", orderable: true }
+            ],
+            pageLength: 10,
+            dom: 'lfBtip',
+            initComplete: function() {
+                $('.dataTables_filter').append('<button class="clear-btn-inline" onclick="clearTableFilter()">Clear Filter</button>');
+            }
+        });
+    }
+}
 
-			Object.keys(grouped).forEach(domain => {
-				let domainTotal = 0;
+function updateFilterControls() {
+    const selectedColumns = $('#columnSelect').val();
+    const $container = $('#filterControls');
+    $container.empty();
+    filters = {};
 
-				Object.keys(grouped[domain]).forEach(appname => {
-					const count = grouped[domain][appname];
-					domainTotal += count;
-					grandTotal += count;
+    selectedColumns.forEach(col => {
+        const values = [...new Set(fullData.map(row => row[col]).filter(Boolean))].sort();
+        const selectId = `filter-${col}`;
+        const html = `
+            <div class="col-auto">
+                <label for="${selectId}">${col}</label>
+                <select id="${selectId}" class="form-select form-select-sm">
+                    <option value="">-- All --</option>
+                    ${values.map(val => `<option value="${val}">${val}</option>`).join('')}
+                </select>
+            </div>`;
+        $container.append(html);
+    });
 
-					tableData.push([
-						domain,
-						appname,
-						`<a href="#" class="show-details" data-domain="${domain}" data-appname="${appname}">${count}</a>`
-					]);
-				});
+    selectedColumns.forEach(col => {
+        $(`#filter-${col}`).on('change', function () {
+            const val = $(this).val();
+            if (val) {
+                filters[col] = val;
+            } else {
+                delete filters[col];
+            }
+            processData(getFilteredData());
+        });
+    });
 
-				tableData.push({
-					0: `<strong>${domain} Subtotal</strong>`,
-					1: '',
-					2: `<strong>${domainTotal}</strong>`,
-					DT_RowClass: 'subtotal-row'
-				});
-			});
+    processData(getFilteredData());
+}
 
-			tableData.push({
-				0: '<strong>Grand Total</strong>',
-				1: '',
-				2: `<strong>${grandTotal}</strong>`,
-				DT_RowClass: 'grand-total-row'
-			});
+function clearTableFilter() {
+    $('#domainTable').DataTable().search('').draw();
+}
 
-			if ($.fn.DataTable.isDataTable('#domainTable')) {
-				$('#domainTable').DataTable().clear().rows.add(tableData).draw();
-			} else {
-				$('#domainTable').DataTable({
-					data: tableData,
-					columns: [
-						{ title: "DOMAIN" },
-						{ title: "APPNAME" },
-						{ title: "Occurrences", orderable: true }
-					],
-					paging: false,
-					searching: false,
-					info: false,
-					ordering: false,
-					dom: 'Btip'
-				});
-			}
-		}
-    
-	
-	
-	
-	</script>
+function showDetailsModal(domain, appname) {
+    let filteredRows;
+    let title;
+
+    if (appname) {
+        filteredRows = fullData.filter(row => row.DOMAIN === domain && row.APPNAME === appname);
+        title = `Details for DOMAIN: ${domain}, APPNAME: ${appname}`;
+    } else {
+        filteredRows = fullData.filter(row => row.DOMAIN === domain);
+        title = `Details for DOMAIN: ${domain}`;
+    }
+
+    if (filteredRows.length === 0) {
+        $('#modalBodyContent').html('<p>No records found.</p>');
+    } else {
+        const columns = Object.keys(filteredRows[0]);
+        let html = '<table class="table table-bordered table-sm"><thead><tr>';
+        columns.forEach(col => html += `<th>${col}</th>`);
+        html += '</tr></thead><tbody>';
+        filteredRows.forEach(row => {
+            html += '<tr>';
+            columns.forEach(col => html += `<td>${row[col]}</td>`);
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        $('#modalBodyContent').html(html);
+    }
+
+    $('#detailsModalLabel').text(title);
+    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    modal.show();
+}
+
+// INIT
+$(document).ready(function () {
+    processData(fullData);
+
+    $('#columnSelect').on('change', function () {
+        updateFilterControls();
+    });
+
+    $(document).on('click', '.show-details', function (e) {
+        e.preventDefault();
+        const domain = $(this).data('domain');
+        const appname = $(this).data('appname');
+        showDetailsModal(domain, appname);
+    });
+});
+</script>
+
 </body>
 </html>
