@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Domain App Dashboard</title>
+    <!-- CSS and JS includes here -->
+</head>
+<body>
+
+    <div class="container">
+        <h2>Application Dashboard</h2>
+
+        <!-- 📌 Add the filter block right here -->
+        <div style="margin-bottom: 20px;">
+            <label for="columnFilter">Filter by:</label>
+            <select id="columnFilter">
+                <option value="">-- Select Column --</option>
+                <option value="DOMAIN">DOMAIN</option>
+                <option value="APPNAME">APPNAME</option>
+            </select>
+
+            <select id="valueFilter" style="display: none;">
+                <option value="">-- Select Value --</option>
+            </select>
+        </div>
+
+        <!-- 📌 Your DataTable goes here -->
+        <table id="domainTable" class="display" style="width:100%"></table>
+
+    </div>
+
+    <script>
+			
+		let rawData = []; // Store original data for filtering
+
+		// Load your JSON and store rawData
+		$.getJSON('/static/data/domain_app_data.json', function(data) {
+			rawData = data;
+			populateFilterOptions(data);
+			processData(data); // Load full table initially
+		});
+
+		// Populate second filter dropdown
+		function populateFilterOptions(data) {
+			const domainSet = new Set();
+			const appSet = new Set();
+
+			data.forEach(row => {
+				domainSet.add(row.DOMAIN);
+				appSet.add(row.APPNAME);
+			});
+
+			$('#columnFilter').on('change', function () {
+				const selectedColumn = $(this).val();
+				const $valueFilter = $('#valueFilter');
+				$valueFilter.empty().append('<option value="">-- Select Value --</option>');
+
+				if (selectedColumn === "DOMAIN") {
+					domainSet.forEach(val => $valueFilter.append(`<option value="${val}">${val}</option>`));
+				} else if (selectedColumn === "APPNAME") {
+					appSet.forEach(val => $valueFilter.append(`<option value="${val}">${val}</option>`));
+				}
+
+				$valueFilter.show();
+			});
+
+			$('#valueFilter').on('change', function () {
+				const column = $('#columnFilter').val();
+				const value = $(this).val();
+				const filteredData = value ? rawData.filter(row => row[column] === value) : rawData;
+				processData(filteredData);
+			});
+		}
+			
+	
+	
+	
+	
+	
+		function processData(data) {
+			const grouped = {};
+			data.forEach(row => {
+				const { DOMAIN, APPNAME } = row;
+				if (!grouped[DOMAIN]) grouped[DOMAIN] = {};
+				if (!grouped[DOMAIN][APPNAME]) grouped[DOMAIN][APPNAME] = 0;
+				grouped[DOMAIN][APPNAME]++;
+			});
+
+			const tableData = [];
+			let grandTotal = 0;
+
+			Object.keys(grouped).forEach(domain => {
+				let domainTotal = 0;
+
+				Object.keys(grouped[domain]).forEach(appname => {
+					const count = grouped[domain][appname];
+					domainTotal += count;
+					grandTotal += count;
+
+					tableData.push([
+						domain,
+						appname,
+						`<a href="#" class="show-details" data-domain="${domain}" data-appname="${appname}">${count}</a>`
+					]);
+				});
+
+				tableData.push({
+					0: `<strong>${domain} Subtotal</strong>`,
+					1: '',
+					2: `<strong>${domainTotal}</strong>`,
+					DT_RowClass: 'subtotal-row'
+				});
+			});
+
+			tableData.push({
+				0: '<strong>Grand Total</strong>',
+				1: '',
+				2: `<strong>${grandTotal}</strong>`,
+				DT_RowClass: 'grand-total-row'
+			});
+
+			if ($.fn.DataTable.isDataTable('#domainTable')) {
+				$('#domainTable').DataTable().clear().rows.add(tableData).draw();
+			} else {
+				$('#domainTable').DataTable({
+					data: tableData,
+					columns: [
+						{ title: "DOMAIN" },
+						{ title: "APPNAME" },
+						{ title: "Occurrences", orderable: true }
+					],
+					paging: false,
+					searching: false,
+					info: false,
+					ordering: false,
+					dom: 'Btip'
+				});
+			}
+		}
+    
+	
+	
+	
+	</script>
+</body>
+</html>
