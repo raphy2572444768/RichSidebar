@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLOBAL Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <style>
+        /* Custom styles for truncated text with tooltip */
+        .truncate-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Basic modal styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            width: 90%;
+            max-width: 500px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Set font to Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex h-screen overflow-hidden">
+
+    <!-- Header Bar -->
+    <header class="fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50">
+        <div class="flex items-center">
+            <button id="sidebarToggle" class="text-gray-600 focus:outline-none focus:text-gray-900 mr-4">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <h1 class="text-2xl font-bold text-gray-800">GLOBAL Dashboard</h1>
+        </div>
+        <!-- Optional: User Profile/Menu can go here -->
+        <div>
+            <span class="text-gray-600">John Doe</span>
+        </div>
+    </header>
+
+    <!-- Collapsible Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full bg-gray-800 text-white w-64 p-4 pt-20 transition-transform duration-300 ease-in-out z-40 -translate-x-full">
+        <nav>
+            <ul class="space-y-2">
+                <li>
+                    <a href="#" id="nav-glob1" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-700 active:bg-gray-700 font-medium">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1l-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Glob1
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-glob2" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-700 font-medium">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253"></path></svg>
+                        Glob2 (Coming Soon)
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-glob3" class="flex items-center py-2 px-4 rounded-md hover:bg-gray-700 font-medium">
+                        <svg class="h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        Glob3 (Coming Soon)
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="flex-1 p-6 mt-16 overflow-y-auto transition-all duration-300 ease-in-out">
+        <div id="glob1-page" class="space-y-8">
+            <!-- Chart View -->
+            <section class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Application Overview Charts</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-medium mb-2 text-gray-600">Occurrences per Domain</h3>
+                        <div class="relative h-64 overflow-x-auto">
+                            <canvas id="domainChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium mb-2 text-gray-600">Occurrences per App Name</h3>
+                        <div class="relative h-64 overflow-x-auto">
+                            <canvas id="appChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Summary Table -->
+            <section class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">Summary Table</h2>
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <!-- Filters -->
+                    <div class="flex items-center space-x-2">
+                        <label for="domainFilter" class="text-gray-700">Domain:</label>
+                        <select id="domainFilter" multiple class="form-multiselect rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 min-w-[150px]">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="appNameFilter" class="text-gray-700">App Name:</label>
+                        <select id="appNameFilter" multiple class="form-multiselect rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 min-w-[150px]">
+                            <!-- Options will be populated by JS -->
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="searchFilter" class="text-gray-700">Search:</label>
+                        <input type="text" id="searchFilter" placeholder="Search all fields..." class="form-input rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <button id="clearFiltersBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
+                        Clear Filters
+                    </button>
+                    <button id="exportCsvBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-150">
+                        Export CSV
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200 bg-white">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">App Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Occurrences</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-between items-center mt-4">
+                    <div>
+                        <label for="pageSize" class="text-gray-700 mr-2">Rows per page:</label>
+                        <select id="pageSize" class="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div id="paginationControls" class="flex space-x-2">
+                        <button id="prevPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Previous</button>
+                        <span id="pageInfo" class="self-center text-gray-700">Page 1 of 1</span>
+                        <button id="nextPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Next</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Details Page (Hidden by default) -->
+        <div id="details-page" class="space-y-8 hidden">
+            <section class="bg-white rounded-lg shadow-lg p-6">
+                <h2 id="detailsPageTitle" class="text-xl font-semibold mb-4 text-gray-700">Details for [App Name or Domain]</h2>
+                <button id="backToDashboardBtn" class="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-150 flex items-center">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Dashboard
+                </button>
+
+                <!-- Advanced Filters for Details Page -->
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <label for="detailsDomainFilter" class="text-gray-700">Domain:</label>
+                        <select id="detailsDomainFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="detailsAppNameFilter" class="text-gray-700">App Name:</label>
+                        <select id="detailsAppNameFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="detailsOwnerFilter" class="text-gray-700">Owner:</label>
+                        <select id="detailsOwnerFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="detailsVersionFilter" class="text-gray-700">Version:</label>
+                        <select id="detailsVersionFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="detailsDeptFilter" class="text-gray-700">Dept:</label>
+                        <select id="detailsDeptFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <button id="clearDetailsFiltersBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
+                        Clear Filters
+                    </button>
+                    <button id="exportDetailsCsvBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-150">
+                        Export CSV
+                    </button>
+                </div>
+
+                <!-- Full Table View for Details Page -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200 bg-white">
+                        <thead id="detailsTableHeader" class="bg-gray-50">
+                            <!-- Table headers will be populated dynamically by JS -->
+                        </thead>
+                        <tbody id="detailsTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Details table rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                 <!-- Details Pagination -->
+                 <div class="flex justify-between items-center mt-4">
+                    <div>
+                        <label for="detailsPageSize" class="text-gray-700 mr-2">Rows per page:</label>
+                        <select id="detailsPageSize" class="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div id="detailsPaginationControls" class="flex space-x-2">
+                        <button id="detailsPrevPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Previous</button>
+                        <span id="detailsPageInfo" class="self-center text-gray-700">Page 1 of 1</span>
+                        <button id="detailsNextPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Next</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Comment Modal -->
+    <div id="commentModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Add/Edit Comment</h3>
+            <textarea id="commentTextarea" class="w-full p-2 border border-gray-300 rounded-md h-32 mb-4 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter your comment here..."></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="saveCommentBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-150">Save Comment</button>
+                <button id="cancelCommentBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data generation and global variables
+        const sampleDomains = ["Finance", "IT", "HR", "Sales", "Marketing", "Operations", "R&D", "Legal"];
+        const sampleAppNames = [
+            "Enterprise Financial System with Very Long Name",
+            "CloudOps Portal",
+            "HR Management Suite",
+            "Customer Relationship Manager",
+            "Marketing Automation Platform",
+            "Supply Chain Optimizer",
+            "Research Data Platform",
+            "Legal Document Workflow",
+            "Project Management Tool",
+            "Internal Communication Hub",
+            "Data Analytics Dashboard",
+            "Security Monitoring System",
+            "Product Lifecycle Management",
+            "Quality Control Application",
+            "Fleet Management Solution",
+            "E-commerce Frontend",
+            "Inventory Tracking System",
+            "Point of Sale System",
+            "Business Intelligence Tool",
+            "Compliance Reporting Software"
+        ];
+        const sampleOwners = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Williams", "Charlie Brown", "Diana Prince", "Clark Kent", "Bruce Wayne"];
+        const sampleVersions = ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "2.0.0", "2.1.0", "3.0.0"];
+        const sampleDepts = ["Finance Group F1", "IT Infra", "HR Talent", "Sales East", "Marketing Digital", "Ops Logistics", "R&D Core", "Legal Compliance", "Project Mgmt Office"];
+
+        let dashboardData = []; // Full dataset
+        let comments = JSON.parse(localStorage.getItem('dashboardComments')) || {}; // Load comments from local storage
+
+        // This function simulates fetching data from a server.
+        // In a real application, you would use `fetch()` or `XMLHttpRequest` here.
+		<!-- const fetchDataFromServer = async () => { -->
+			<!-- try { -->
+				<!-- const response = await fetch('/api/your-dashboard-data'); // Replace with your actual API endpoint -->
+				<!-- if (!response.ok) { -->
+					<!-- throw new Error(`HTTP error! status: ${response.status}`); -->
+				<!-- } -->
+				<!-- const data = await response.json(); -->
+				<!-- return data; -->
+			<!-- } catch (error) { -->
+				<!-- console.error("Error fetching data:", error); -->
+				<!-- return []; // Return empty array on error -->
+			<!-- } -->
+		<!-- };		 -->
+		
+        const fetchDataFromServer = async () => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate server response with 1000+ entries
+                    const serverRawData = [];
+                    for (let i = 0; i < 2000; i++) {
+                        serverRawData.push({
+                            DOMAIN: sampleDomains[Math.floor(Math.random() * sampleDomains.length)],
+                            "APP NAME": sampleAppNames[Math.floor(Math.random() * sampleAppNames.length)],
+                            OWNER: sampleOwners[Math.floor(Math.random() * sampleOwners.length)],
+                            VERSION: sampleVersions[Math.floor(Math.random() * sampleVersions.length)],
+                            DEPT: sampleDepts[Math.floor(Math.random() * sampleDepts.length)]
+                        });
+                    }
+                    resolve(serverRawData);
+                }, 500); // Simulate network delay
+            });
+        };
+
+        // Global state for filtering and pagination
+        let currentView = 'glob1'; // 'glob1' or 'details'
+        let currentGlob1Filters = {
+            domain: [],
+            appName: [],
+            search: ''
+        };
+        let currentDetailsFilters = {
+            domain: '',
+            appName: '',
+            owner: '',
+            version: '',
+            dept: ''
+        };
+        let currentDetailsData = []; // Data specific to the details page
+        let currentEditItemId = null; // Used for comment modal
+        let currentPage = 1;
+        let pageSize = 25;
+        let detailsCurrentPage = 1;
+        let detailsPageSize = 25;
+
+        // Chart instances
+        let domainChartInstance = null;
+        let appChartInstance = null;
+
+        // DOM Elements - These will be initialized inside window.onload
+        let glob1Page;
+        let detailsPage;
+        let sidebar;
+        let sidebarToggle;
+        let navGlob1;
+        let navGlob2;
+        let navGlob3;
+        let mainContent;
+
+        // Glob1 elements
+        let domainChartCanvas;
+        let appChartCanvas;
+        let summaryTableBody;
+        let domainFilterSelect;
+        let appNameFilterSelect;
+        let searchFilterInput;
+        let clearFiltersBtn;
+        let exportCsvBtn;
+        let pageSizeSelect;
+        let prevPageBtn;
+        let nextPageBtn;
+        let pageInfoSpan;
+
+        // Details page elements
+        let backToDashboardBtn;
+        let detailsPageTitle;
+        let detailsTableHeader; // Added for dynamic headers
+        let detailsTableBody;
+        let detailsDomainFilter;
+        let detailsAppNameFilter;
+        let detailsOwnerFilter;
+        let detailsVersionFilter;
+        let detailsDeptFilter;
+        let clearDetailsFiltersBtn;
+        let exportDetailsCsvBtn;
+        let detailsPageSizeSelect;
+        let detailsPrevPageBtn;
+        let detailsNextPageBtn;
+        let detailsPageInfoSpan;
+
+        // Comment Modal elements
+        let commentModal;
+        let closeModalBtn;
+        let commentTextarea;
+        let saveCommentBtn;
+        let cancelCommentBtn;
+
+
+        let isSidebarOpen = false; // Track sidebar state
+
+        // --- Utility Functions ---
+
+        /**
+         * Truncates text and adds a title attribute for tooltip.
+         * @param {string} text - The text to truncate.
+         * @param {number} maxLength - The maximum length before truncation.
+         * @returns {string} - HTML string with truncated text.
+         */
+        const getTruncatedTextHtml = (text, maxLength) => {
+            if (text.length > maxLength) {
+                return `<span class="truncate-text" title="${text}">${text.substring(0, maxLength)}...</span>`;
+            }
+            return text;
+        };
+
+        /**
+         * Exports table data to CSV.
+         * @param {Array<Object>} data - The array of objects to export.
+         * @param {string} filename - The desired filename for the CSV.
+         * @param {Array<string>} headers - Optional array of headers if different from object keys.
+         */
+        const exportTableToCSV = (data, filename, headers = []) => {
+            if (!data || data.length === 0) {
+                console.warn("No data to export.");
+                return;
+            }
+
+            const actualHeaders = headers.length > 0 ? headers : Object.keys(data[0]);
+            let csvContent = actualHeaders.map(header => `"${header}"`).join(",") + "\n"; // Add quotes to headers
+
+            data.forEach(row => {
+                let rowContent = actualHeaders.map(header => {
+                    const value = row[header] !== undefined && row[header] !== null ? String(row[header]) : '';
+                    // Escape double quotes and enclose in double quotes
+                    return `"${value.replace(/"/g, '""')}"`;
+                }).join(",");
+                csvContent += rowContent + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) { // feature detection
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+
+        // --- Core Rendering Functions ---
+
+        /**
+         * Renders the charts for Glob1 page.
+         * @param {Array<Object>} data - The dataset to use for charts.
+         */
+        const renderCharts = (data) => {
+            // Data aggregation
+            const domainCounts = {};
+            const appCounts = {};
+            data.forEach(item => {
+                domainCounts[item.DOMAIN] = (domainCounts[item.DOMAIN] || 0) + 1;
+                appCounts[item["APP NAME"]] = (appCounts[item["APP NAME"]] || 0) + 1;
+            });
+
+            // Sort and get top N for app names if too many
+            const sortedAppCounts = Object.entries(appCounts).sort(([,a],[,b]) => b-a);
+            const topNApps = sortedAppCounts.slice(0, 20); // Show top 20 apps for readability
+
+            const domainLabels = Object.keys(domainCounts);
+            const domainData = Object.values(domainCounts);
+
+            // Destroy existing chart instances if they exist
+            if (domainChartInstance) domainChartInstance.destroy();
+            if (appChartInstance) appChartInstance.destroy();
+
+            // Chart 1: Occurrences per Domain
+            domainChartInstance = new Chart(domainChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: domainLabels,
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: domainData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bars for long labels
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Truncate labels for display, full label in tooltip
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 20 ? label.substring(0, 20) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const domain = domainLabels[clickedIndex];
+                            navigateToDetails({ domain: domain });
+                        }
+                    }
+                }
+            });
+
+            const appLabels = topNApps.map(item => item[0]);
+            const appData = topNApps.map(item => item[1]);
+            // Chart 2: Occurrences per App Name
+            appChartInstance = new Chart(appChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: appLabels,
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: appData,
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bars for long labels
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Truncate labels for display, full label in tooltip
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 20 ? label.substring(0, 20) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const appName = appLabels[clickedIndex];
+                            navigateToDetails({ appName: appName });
+                        }
+                    }
+                }
+            });
+        };
+
+        /**
+         * Renders the summary table for Glob1 page.
+         * @param {Array<Object>} data - The dataset to display.
+         */
+        const renderSummaryTable = (data) => {
+            const aggregatedData = {};
+            data.forEach(item => {
+                const key = `${item.DOMAIN}|${item["APP NAME"]}`;
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = {
+                        DOMAIN: item.DOMAIN,
+                        "APP NAME": item["APP NAME"],
+                        Occurrences: 0,
+                        // Store the original records' IDs for drilling down
+                        ids: []
+                    };
+                }
+                aggregatedData[key].Occurrences++;
+                // Ensure item.id exists before pushing; it should if processed by setupData
+                if (item.id) {
+                    aggregatedData[key].ids.push(item.id);
+                }
+            });
+
+            let filteredData = Object.values(aggregatedData);
+
+            // Apply filters
+            if (currentGlob1Filters.domain.length > 0) {
+                filteredData = filteredData.filter(item => currentGlob1Filters.domain.includes(item.DOMAIN));
+            }
+            if (currentGlob1Filters.appName.length > 0) {
+                filteredData = filteredData.filter(item => currentGlob1Filters.appName.includes(item["APP NAME"]));
+            }
+            if (currentGlob1Filters.search) {
+                const searchTerm = currentGlob1Filters.search.toLowerCase();
+                filteredData = filteredData.filter(item =>
+                    item.DOMAIN.toLowerCase().includes(searchTerm) ||
+                    item["APP NAME"].toLowerCase().includes(searchTerm) ||
+                    String(item.Occurrences).toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Pagination
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+            const paginatedData = filteredData.slice(startIndex, endIndex);
+
+            summaryTableBody.innerHTML = '';
+            if (paginatedData.length === 0) {
+                summaryTableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">No data found.</td></tr>`;
+            } else {
+                paginatedData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTruncatedTextHtml(item.DOMAIN, 30)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTruncatedTextHtml(item["APP NAME"], 40)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 cursor-pointer font-medium hover:underline occurrence-link" data-ids='${JSON.stringify(item.ids)}'>${item.Occurrences}</td>
+                    `;
+                    summaryTableBody.appendChild(row);
+                });
+            }
+
+            // Update pagination info
+            pageInfoSpan.textContent = `Page ${totalPages === 0 ? 0 : currentPage} of ${totalPages} (${filteredData.length} entries)`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+        };
+
+        /**
+         * Populates filter dropdowns with unique values from the data.
+         * @param {Array<Object>} data - The dataset to extract unique values from.
+         */
+        const populateFilters = (data) => {
+            const uniqueDomains = [...new Set(data.map(item => item.DOMAIN))].sort();
+            const uniqueAppNames = [...new Set(data.map(item => item["APP NAME"]))].sort();
+
+            // Clear existing options
+            domainFilterSelect.innerHTML = '';
+            appNameFilterSelect.innerHTML = '';
+
+            // Add options for Glob1 summary filters
+            uniqueDomains.forEach(domain => {
+                const option = document.createElement('option');
+                option.value = domain;
+                option.textContent = domain;
+                if (currentGlob1Filters.domain.includes(domain)) {
+                    option.selected = true;
+                }
+                domainFilterSelect.appendChild(option);
+            });
+
+            uniqueAppNames.forEach(appName => {
+                const option = document.createElement('option');
+                option.value = appName;
+                option.textContent = appName;
+                if (currentGlob1Filters.appName.includes(appName)) {
+                    option.selected = true;
+                }
+                appNameFilterSelect.appendChild(option);
+            });
+            searchFilterInput.value = currentGlob1Filters.search;
+        };
+
+        /**
+         * Renders the details page.
+         * @param {Object} filters - Initial filters to apply to the details data.
+         * @param {Array<string>} [ids=null] - Optional array of record IDs to filter by.
+         */
+        const renderDetailsPage = (filters = {}, ids = null) => {
+            currentView = 'details';
+            glob1Page.classList.add('hidden');
+            detailsPage.classList.remove('hidden');
+
+            // Set initial filters for the details page
+            currentDetailsFilters = { ...currentDetailsFilters, ...filters };
+
+            let filteredBaseData = dashboardData;
+            if (ids && ids.length > 0) {
+                // If specific IDs are passed (from 'Occurrences' link), filter by them
+                filteredBaseData = dashboardData.filter(item => ids.includes(item.id));
+            } else if (filters.domain || filters.appName) {
+                // If domain/appName from chart click, filter by that
+                filteredBaseData = dashboardData.filter(item =>
+                    (!filters.domain || item.DOMAIN === filters.domain) &&
+                    (!filters.appName || item["APP NAME"] === filters.appName)
+                );
+            }
+
+            currentDetailsData = filteredBaseData; // This is the base data for details page, before its own filters are applied
+
+            // Populate advanced filters for details page
+            const uniqueDetailsDomains = [...new Set(currentDetailsData.map(item => item.DOMAIN))].sort();
+            const uniqueDetailsAppNames = [...new Set(currentDetailsData.map(item => item["APP NAME"]))].sort();
+            const uniqueDetailsOwners = [...new Set(currentDetailsData.map(item => item.OWNER))].sort();
+            const uniqueDetailsVersions = [...new Set(currentDetailsData.map(item => item.VERSION))].sort();
+            const uniqueDetailsDepts = [...new Set(currentDetailsData.map(item => item.DEPT))].sort();
+
+            const populateSelect = (selectElement, options, selectedValue) => {
+                selectElement.innerHTML = '<option value="">All</option>';
+                options.forEach(optionText => {
+                    const option = document.createElement('option');
+                    option.value = option.textContent = optionText;
+                    if (optionText === selectedValue) {
+                        option.selected = true;
+                    }
+                    selectElement.appendChild(option);
+                });
+            };
+
+            populateSelect(detailsDomainFilter, uniqueDetailsDomains, currentDetailsFilters.domain);
+            populateSelect(detailsAppNameFilter, uniqueDetailsAppNames, currentDetailsFilters.appName);
+            populateSelect(detailsOwnerFilter, uniqueDetailsOwners, currentDetailsFilters.owner);
+            populateSelect(detailsVersionFilter, uniqueDetailsVersions, currentDetailsFilters.version);
+            populateSelect(detailsDeptFilter, uniqueDetailsDepts, currentDetailsFilters.dept);
+
+            updateDetailsTable(); // Render table based on filters
+        };
+
+        /**
+         * Updates and renders the details table based on currentDetailsFilters.
+         */
+        const updateDetailsTable = () => {
+            let filteredDetails = currentDetailsData;
+
+            // Apply filters specific to the details page
+            if (currentDetailsFilters.domain) {
+                filteredDetails = filteredDetails.filter(item => item.DOMAIN === currentDetailsFilters.domain);
+            }
+            if (currentDetailsFilters.appName) {
+                filteredDetails = filteredDetails.filter(item => item["APP NAME"] === currentDetailsFilters.appName);
+            }
+            if (currentDetailsFilters.owner) {
+                filteredDetails = filteredDetails.filter(item => item.OWNER === currentDetailsFilters.owner);
+            }
+            if (currentDetailsFilters.version) {
+                filteredDetails = filteredDetails.filter(item => item.VERSION === currentDetailsFilters.version);
+            }
+            if (currentDetailsFilters.dept) {
+                filteredDetails = filteredDetails.filter(item => item.DEPT === currentDetailsFilters.dept);
+            }
+
+            // Update title
+            let titleSuffix = '';
+            if (currentDetailsFilters.domain && !currentDetailsFilters.appName) {
+                titleSuffix = `Domain: ${currentDetailsFilters.domain}`;
+            } else if (currentDetailsFilters.appName && !currentDetailsFilters.domain) {
+                titleSuffix = `App Name: ${currentDetailsFilters.appName}`;
+            } else if (currentDetailsFilters.domain && currentDetailsFilters.appName) {
+                titleSuffix = `Domain: ${currentDetailsFilters.domain}, App Name: ${currentDetailsFilters.appName}`;
+            } else {
+                titleSuffix = 'All Applications';
+            }
+            detailsPageTitle.textContent = `Details for ${titleSuffix}`;
+
+            // Dynamically generate table headers
+            detailsTableHeader.innerHTML = ''; // Clear existing headers
+            if (filteredDetails.length > 0) {
+                const headerRow = document.createElement('tr');
+                // Get all unique keys from the first item, excluding 'id' and 'COMMENT'
+                const dynamicHeaders = Object.keys(filteredDetails[0]).filter(key => key !== 'id' && key !== 'COMMENT');
+
+                dynamicHeaders.forEach(key => {
+                    const th = document.createElement('th');
+                    th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                    th.textContent = key.toUpperCase(); // Display key in uppercase
+                    headerRow.appendChild(th);
+                });
+
+                // Add Comment and Actions headers back
+                const commentTh = document.createElement('th');
+                commentTh.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                commentTh.textContent = 'Comment';
+                headerRow.appendChild(commentTh);
+
+                const actionsTh = document.createElement('th');
+                actionsTh.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                actionsTh.textContent = 'Actions';
+                headerRow.appendChild(actionsTh);
+
+                detailsTableHeader.appendChild(headerRow);
+            }
+
+
+            // Pagination for details table
+            const totalPages = Math.ceil(filteredDetails.length / detailsPageSize);
+            const startIndex = (detailsCurrentPage - 1) * detailsPageSize;
+            const endIndex = Math.min(startIndex + detailsPageSize, filteredDetails.length);
+            const paginatedData = filteredDetails.slice(startIndex, endIndex);
+
+            detailsTableBody.innerHTML = '';
+            if (paginatedData.length === 0) {
+                // Adjust colspan for dynamically generated headers + Comment + Actions
+                // Note: If filteredDetails.length is 0, filteredDetails[0] would cause an error.
+                // We base colspan on expected headers if data exists, otherwise a default for no data message.
+                const baseHeadersCount = Object.keys(sampleDomains[0] || {}).length; // Get expected number of initial data columns
+                const colSpan = (baseHeadersCount > 0 ? baseHeadersCount : 0) + 2; // Add 2 for Comment and Actions
+                detailsTableBody.innerHTML = `<tr><td colspan="${colSpan}" class="px-6 py-4 text-center text-gray-500">No matching records found.</td></tr>`;
+            } else {
+                paginatedData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+
+                    // Dynamically add data cells based on headers (excluding 'id' and 'COMMENT')
+                    const dynamicHeaders = Object.keys(item).filter(key => key !== 'id' && key !== 'COMMENT');
+                    dynamicHeaders.forEach(key => {
+                        const td = document.createElement('td');
+                        td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+                        td.innerHTML = getTruncatedTextHtml(String(item[key]), 30); // Use String(item[key]) to handle non-string values
+                        row.appendChild(td);
+                    });
+
+                    // Add Comment cell
+                    const commentTd = document.createElement('td');
+                    commentTd.className = 'px-6 py-4 text-sm text-gray-900';
+                    const commentText = comments[item.id] || "";
+                    commentTd.innerHTML = `<span class="truncate-text max-w-xs block" title="${commentText}">${getTruncatedTextHtml(commentText, 40)}</span>`;
+                    row.appendChild(commentTd);
+
+                    // Add Actions cell
+                    const actionsTd = document.createElement('td');
+                    actionsTd.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
+                    actionsTd.innerHTML = `
+                        <button class="text-indigo-600 hover:text-indigo-900 edit-comment-btn" data-id="${item.id}" data-comment="${commentText}">
+                            <svg class="inline-block h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                    `;
+                    row.appendChild(actionsTd);
+
+                    detailsTableBody.appendChild(row);
+                });
+            }
+
+            // Update details pagination info
+            detailsPageInfoSpan.textContent = `Page ${totalPages === 0 ? 0 : detailsCurrentPage} of ${totalPages} (${filteredDetails.length} entries)`;
+            detailsPrevPageBtn.disabled = detailsCurrentPage === 1;
+            detailsNextPageBtn.disabled = detailsCurrentPage === totalPages || totalPages === 0;
+        };
+
+        /**
+         * Navigates to the details page with optional initial filters.
+         * @param {Object} [filters={}] - An object containing initial filters (e.g., { domain: 'IT' }).
+         * @param {Array<string>} [ids=null] - An array of specific record IDs to show.
+         */
+        const navigateToDetails = (filters = {}, ids = null) => {
+            detailsCurrentPage = 1; // Reset pagination when navigating to details
+            currentDetailsFilters = { // Reset all filters for fresh navigation
+                domain: '', appName: '', owner: '', version: '', dept: ''
+            };
+            renderDetailsPage(filters, ids);
+        };
+
+        // --- Event Handlers (Moved into a function to be called after DOM is ready) ---
+        const setupEventListeners = () => {
+            // Sidebar toggle for mobile and desktop
+            sidebarToggle.addEventListener('click', toggleSidebar);
+
+            // Navigation links
+            navGlob1.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentView = 'glob1';
+                glob1Page.classList.remove('hidden');
+                detailsPage.classList.add('hidden');
+                currentPage = 1; // Reset Glob1 pagination
+                renderDashboard(); // Re-render Glob1 with current filters
+                // On mobile, hide sidebar when navigating
+                if (window.innerWidth <= 768 && isSidebarOpen) {
+                    toggleSidebar();
+                }
+            });
+
+            // Placeholder for other Glob pages (do nothing for now)
+            navGlob2.addEventListener('click', (e) => { e.preventDefault(); alert('Glob2 page coming soon!'); });
+            navGlob3.addEventListener('click', (e) => { e.preventDefault(); alert('Glob3 page coming soon!'); });
+
+
+            // Glob1 Filters & Search
+            domainFilterSelect.addEventListener('change', () => {
+                currentGlob1Filters.domain = Array.from(domainFilterSelect.selectedOptions).map(option => option.value);
+                currentPage = 1;
+                renderSummaryTable(dashboardData);
+                renderCharts(dashboardData); // Charts update with filter too
+            });
+
+            appNameFilterSelect.addEventListener('change', () => {
+                currentGlob1Filters.appName = Array.from(appNameFilterSelect.selectedOptions).map(option => option.value);
+                currentPage = 1;
+                renderSummaryTable(dashboardData);
+                renderCharts(dashboardData); // Charts update with filter too
+            });
+
+            searchFilterInput.addEventListener('input', () => {
+                currentGlob1Filters.search = searchFilterInput.value;
+                currentPage = 1;
+                renderSummaryTable(dashboardData);
+            });
+
+            clearFiltersBtn.addEventListener('click', () => {
+                currentGlob1Filters = { domain: [], appName: [], search: '' };
+                domainFilterSelect.value = ''; // Reset multi-select
+                Array.from(domainFilterSelect.options).forEach(option => option.selected = false);
+                appNameFilterSelect.value = ''; // Reset multi-select
+                Array.from(appNameFilterSelect.options).forEach(option => option.selected = false);
+                searchFilterInput.value = '';
+                currentPage = 1;
+                renderDashboard(); // Re-render everything in Glob1
+            });
+
+            exportCsvBtn.addEventListener('click', () => {
+                // Get currently filtered and paginated data from the table
+                const tableRows = summaryTableBody.querySelectorAll('tr');
+                const dataToExport = [];
+                tableRows.forEach(row => {
+                    const domainCell = row.children[0].querySelector('.truncate-text') || row.children[0];
+                    const appNameCell = row.children[1].querySelector('.truncate-text') || row.children[1];
+                    const occurrencesCell = row.children[2];
+
+                    // Check if the row contains actual data or is a "No data" message
+                    if (domainCell && occurrencesCell) {
+                        const domain = domainCell.title || domainCell.textContent.trim();
+                        const appName = appNameCell.title || appNameCell.textContent.trim();
+                        const occurrences = parseInt(occurrencesCell.textContent.trim());
+                        if (!isNaN(occurrences)) {
+                            dataToExport.push({
+                                Domain: domain,
+                                "App Name": appName,
+                                Occurrences: occurrences
+                            });
+                        }
+                    }
+                });
+                exportTableToCSV(dataToExport, 'summary_dashboard_data.csv', ["Domain", "App Name", "Occurrences"]);
+            });
+
+
+            // Pagination for Glob1 summary table
+            pageSizeSelect.addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                renderSummaryTable(dashboardData);
+            });
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderSummaryTable(dashboardData);
+                }
+            });
+            nextPageBtn.addEventListener('click', () => {
+                const filteredData = Object.values(dashboardData.reduce((acc, item) => { // Re-aggregate for total count
+                    const key = `${item.DOMAIN}|${item["APP NAME"]}`;
+                    if (!acc[key]) acc[key] = { DOMAIN: item.DOMAIN, "APP NAME": item["APP NAME"], Occurrences: 0 };
+                    acc[key].Occurrences++;
+                    return acc;
+                }, {}));
+
+                const totalFilteredData = filteredData.filter(item =>
+                    (currentGlob1Filters.domain.length === 0 || currentGlob1Filters.domain.includes(item.DOMAIN)) &&
+                    (currentGlob1Filters.appName.length === 0 || currentGlob1Filters.appName.includes(item["APP NAME"])) &&
+                    (item.DOMAIN.toLowerCase().includes(currentGlob1Filters.search.toLowerCase()) ||
+                     item["APP NAME"].toLowerCase().includes(currentGlob1Filters.search.toLowerCase()) ||
+                     String(item.Occurrences).toLowerCase().includes(currentGlob1Filters.search.toLowerCase()))
+                ).length;
+
+                if (currentPage * pageSize < totalFilteredData) {
+                    currentPage++;
+                    renderSummaryTable(dashboardData);
+                }
+            });
+
+            // Handle clicks on "Occurrences" in summary table to drill down
+            summaryTableBody.addEventListener('click', (e) => {
+                const target = e.target.closest('.occurrence-link');
+                if (target) {
+                    const ids = JSON.parse(target.dataset.ids);
+                    navigateToDetails({}, ids); // Pass specific IDs
+                }
+            });
+
+
+            // Details Page Handlers
+            backToDashboardBtn.addEventListener('click', () => {
+                currentView = 'glob1';
+                glob1Page.classList.remove('hidden');
+                detailsPage.classList.add('hidden');
+                // currentPage is preserved from previous Glob1 state
+                renderDashboard(); // Re-render Glob1 to show previous state
+            });
+
+            // Advanced Filters for Details Page
+            detailsDomainFilter.addEventListener('change', (e) => {
+                currentDetailsFilters.domain = e.target.value;
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+            detailsAppNameFilter.addEventListener('change', (e) => {
+                currentDetailsFilters["APP NAME"] = e.target.value; // Note: Use bracket notation for "APP NAME"
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+            detailsOwnerFilter.addEventListener('change', (e) => {
+                currentDetailsFilters.owner = e.target.value;
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+            detailsVersionFilter.addEventListener('change', (e) => {
+                currentDetailsFilters.version = e.target.value;
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+            detailsDeptFilter.addEventListener('change', (e) => {
+                currentDetailsFilters.dept = e.target.value;
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+
+            clearDetailsFiltersBtn.addEventListener('click', () => {
+                currentDetailsFilters = { domain: '', appName: '', owner: '', version: '', dept: '' };
+                detailsDomainFilter.value = '';
+                detailsAppNameFilter.value = '';
+                detailsOwnerFilter.value = '';
+                detailsVersionFilter.value = '';
+                detailsDeptFilter.value = '';
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+
+            exportDetailsCsvBtn.addEventListener('click', () => {
+                let filteredDetails = currentDetailsData;
+
+                // Apply filters specific to the details page
+                if (currentDetailsFilters.domain) {
+                    filteredDetails = filteredDetails.filter(item => item.DOMAIN === currentDetailsFilters.domain);
+                }
+                if (currentDetailsFilters.appName) {
+                    filteredDetails = filteredDetails.filter(item => item["APP NAME"] === currentDetailsFilters.appName);
+                }
+                if (currentDetailsFilters.owner) {
+                    filteredDetails = filteredDetails.filter(item => item.OWNER === currentDetailsFilters.owner);
+                }
+                if (currentDetailsFilters.version) {
+                    filteredDetails = filteredDetails.filter(item => item.VERSION === currentDetailsFilters.version);
+                }
+                if (currentDetailsFilters.dept) {
+                    filteredDetails = filteredDetails.filter(item => item.DEPT === currentDetailsFilters.dept);
+                }
+
+                exportTableToCSV(filteredDetails, 'details_dashboard_data.csv', ["DOMAIN", "APP NAME", "OWNER", "VERSION", "DEPT", "COMMENT"]);
+            });
+
+            // Pagination for Details table
+            detailsPageSizeSelect.addEventListener('change', (e) => {
+                detailsPageSize = parseInt(e.target.value);
+                detailsCurrentPage = 1;
+                updateDetailsTable();
+            });
+            detailsPrevPageBtn.addEventListener('click', () => {
+                if (detailsCurrentPage > 1) {
+                    detailsCurrentPage--;
+                    updateDetailsTable();
+                }
+            });
+            nextPageBtn.addEventListener('click', () => {
+                let filteredDetails = currentDetailsData; // Get the currently filtered data
+                if (currentDetailsFilters.domain) {
+                    filteredDetails = filteredDetails.filter(item => item.DOMAIN === currentDetailsFilters.domain);
+                }
+                if (currentDetailsFilters.appName) {
+                    filteredDetails = filteredDetails.filter(item => item["APP NAME"] === currentDetailsFilters.appName);
+                }
+                if (currentDetailsFilters.owner) {
+                    filteredDetails = filteredDetails.filter(item => item.OWNER === currentDetailsFilters.owner);
+                }
+                if (currentDetailsFilters.version) {
+                    filteredDetails = filteredDetails.filter(item => item.VERSION === currentDetailsFilters.version);
+                }
+                if (currentDetailsFilters.dept) {
+                    filteredDetails = filteredDetails.filter(item => item.DEPT === currentDetailsFilters.dept);
+                }
+
+                if (detailsCurrentPage * detailsPageSize < filteredDetails.length) {
+                    detailsCurrentPage++;
+                    updateDetailsTable();
+                }
+            });
+
+            // Comment Modal Handlers
+            detailsTableBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-comment-btn');
+                if (editBtn) {
+                    currentEditItemId = editBtn.dataset.id;
+                    commentTextarea.value = editBtn.dataset.comment || "";
+                    commentModal.classList.remove('hidden');
+                }
+            });
+
+            closeModalBtn.addEventListener('click', () => {
+                commentModal.classList.add('hidden');
+            });
+
+            cancelCommentBtn.addEventListener('click', () => {
+                commentModal.classList.add('hidden');
+            });
+
+            saveCommentBtn.addEventListener('click', () => {
+                if (currentEditItemId) {
+                    comments[currentEditItemId] = commentTextarea.value;
+                    localStorage.setItem('dashboardComments', JSON.stringify(comments));
+                    // Update the specific item in dashboardData (important if navigating back to summary with comments)
+                    const itemToUpdate = dashboardData.find(item => item.id === currentEditItemId);
+                    if (itemToUpdate) {
+                        itemToUpdate.COMMENT = commentTextarea.value;
+                    }
+                    commentModal.classList.add('hidden');
+                    updateDetailsTable(); // Re-render details table to show new comment
+                }
+            });
+
+            // Close modal if clicked outside content
+            commentModal.addEventListener('click', (e) => {
+                if (e.target === commentModal) {
+                    commentModal.classList.add('hidden');
+                }
+            });
+        };
+
+
+        // Function to toggle sidebar and main content margin
+        const toggleSidebar = () => {
+            isSidebarOpen = !isSidebarOpen;
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                mainContent.classList.add('md:ml-64');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                mainContent.classList.remove('md:ml-64');
+            }
+        };
+
+        // Initial setup based on screen size
+        const setInitialSidebarState = () => {
+            if (window.innerWidth > 768) { // Desktop
+                isSidebarOpen = true;
+                sidebar.classList.remove('-translate-x-full');
+                mainContent.classList.add('md:ml-64');
+            } else { // Mobile
+                isSidebarOpen = false;
+                sidebar.classList.add('-translate-x-full');
+                mainContent.classList.remove('md:ml-64');
+            }
+        };
+
+        // --- Initial Load ---
+        const renderDashboard = () => {
+            populateFilters(dashboardData);
+            renderCharts(dashboardData);
+            renderSummaryTable(dashboardData);
+        };
+
+        // Initial render when the page loads
+        window.onload = async () => {
+            // Initialize DOM element references after the HTML is loaded
+            glob1Page = document.getElementById('glob1-page');
+            detailsPage = document.getElementById('details-page');
+            sidebar = document.getElementById('sidebar');
+            sidebarToggle = document.getElementById('sidebarToggle');
+            navGlob1 = document.getElementById('nav-glob1');
+            navGlob2 = document.getElementById('nav-glob2');
+            navGlob3 = document.getElementById('nav-glob3');
+            mainContent = document.getElementById('main-content');
+
+            domainChartCanvas = document.getElementById('domainChart');
+            appChartCanvas = document.getElementById('appChart');
+            summaryTableBody = document.getElementById('summaryTableBody');
+            domainFilterSelect = document.getElementById('domainFilter');
+            appNameFilterSelect = document.getElementById('appNameFilter');
+            searchFilterInput = document.getElementById('searchFilter');
+            clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            exportCsvBtn = document.getElementById('exportCsvBtn');
+            pageSizeSelect = document.getElementById('pageSize');
+            prevPageBtn = document.getElementById('prevPageBtn');
+            nextPageBtn = document.getElementById('nextPageBtn');
+            pageInfoSpan = document.getElementById('pageInfo');
+
+            backToDashboardBtn = document.getElementById('backToDashboardBtn');
+            detailsPageTitle = document.getElementById('detailsPageTitle');
+            detailsTableHeader = document.getElementById('detailsTableHeader');
+            detailsTableBody = document.getElementById('detailsTableBody');
+            detailsDomainFilter = document.getElementById('detailsDomainFilter');
+            detailsAppNameFilter = document.getElementById('detailsAppNameFilter');
+            detailsOwnerFilter = document.getElementById('detailsOwnerFilter');
+            detailsVersionFilter = document.getElementById('detailsVersionFilter');
+            detailsDeptFilter = document.getElementById('detailsDeptFilter');
+            clearDetailsFiltersBtn = document.getElementById('clearDetailsFiltersBtn');
+            exportDetailsCsvBtn = document.getElementById('exportDetailsCsvBtn');
+            detailsPageSizeSelect = document.getElementById('detailsPageSize');
+            detailsPrevPageBtn = document.getElementById('detailsPrevPageBtn');
+            detailsNextPageBtn = document.getElementById('detailsNextPageBtn');
+            detailsPageInfoSpan = document.getElementById('detailsPageInfo');
+
+            commentModal = document.getElementById('commentModal');
+            closeModalBtn = document.getElementById('closeModalBtn');
+            commentTextarea = document.getElementById('commentTextarea');
+            saveCommentBtn = document.getElementById('saveCommentBtn');
+            cancelCommentBtn = document.getElementById('cancelCommentBtn');
+
+
+            // Simulate fetching data from server
+            const rawServerData = await fetchDataFromServer();
+            dashboardData = rawServerData.map((item, index) => ({
+                id: `rec_${Date.now()}_${index}`, // Generate a unique ID for each record
+                ...item,
+                COMMENT: comments[`rec_${Date.now()}_${index}`] || "" // Load existing comment or empty string
+            }));
+
+            setInitialSidebarState(); // Set initial state based on window size
+            renderDashboard(); // Render dashboard content
+            setupEventListeners(); // Set up all event listeners after elements are defined
+        };
+
+        // Ensure sidebar state is correct on resize
+        window.addEventListener('resize', setInitialSidebarState);
+    </script>
+</body>
+</html>
