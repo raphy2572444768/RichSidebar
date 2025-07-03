@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrated Dashboard</title>
+    <!-- Tailwind CSS CDN (using JIT for modern features) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for sidebar collapse */
+        #sidebar.collapsed {
+            width: 4rem; /* Adjust as needed for icon-only display */
+        }
+        #sidebar:not(.collapsed) .sidebar-text {
+            display: block;
+        }
+        #sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        #sidebar.collapsed .sidebar-icon {
+            margin-right: 0;
+            justify-content: center;
+        }
+        #sidebar:not(.collapsed) .sidebar-icon {
+            margin-right: 0.75rem; /* Equivalent to mr-3 */
+        }
+
+        .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #3B82F6; /* Blue-500 */
+        }
+
+        .dashboard-page.hidden {
+            display: none;
+        }
+        /* Class for sub-pages within a main dashboard section */
+        .project1-subpage.hidden,
+        .global-subpage.hidden {
+            display: none;
+        }
+
+        /* Color thresholds for metrics (example from Cyber Security Dashboard) */
+        .bg-metric-green { background-color: #10B981; } /* Emerald-500 */
+        .bg-metric-yellow { background-color: #FBBF24; } /* Amber-400 */
+        .bg-metric-orange { background-color: #FB923C; } /* Orange-500 */
+        .bg-metric-red { background-color: #EF4444; } /* Red-500 */
+
+        /* Custom styles for truncated text with tooltip (from GLOBAL Dashboard) */
+        .truncate-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Basic modal styles (from GLOBAL Dashboard) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 0.75rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            width: 90%;
+            max-width: 500px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex min-h-screen">
+
+    <div class="min-h-screen flex flex-1">
+        <!-- Left Pane (Sidebar) - From Cyber Security Dashboard -->
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-shrink-0 transition-all duration-300 ease-in-out p-4">
+            <div class="flex items-center justify-between h-16 mb-6">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold sidebar-text">CyberSecure</span>
+                    <span class="text-2xl font-bold hidden sidebar-icon">CS</span>
+                </div>
+            </div>
+
+            <!-- Projects Navigation -->
+            <nav class="space-y-4">
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 sidebar-text mb-2">Projects</h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="flex items-center py-2 px-3 rounded-lg text-sm font-medium text-blue-400 bg-gray-700 sidebar-link parent-link" data-page="project1-overview">
+                                <span class="sidebar-icon">💡</span> <span class="sidebar-text">Project 1: Dashboard</span>
+                            </a>
+                            <!-- Project 1 Metrics Subpages - Nested under Project 1 -->
+                            <div id="project1-metrics-nav" class="pl-6 pt-1 hidden">
+                                <ul class="space-y-1">
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link metric-link" data-metric-page="overview">
+                                            <span class="sidebar-icon">📊</span> <span class="sidebar-text">Overview</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link metric-link" data-metric-page="critical-vulnerabilities">
+                                            <span class="sidebar-icon">🚨</span> <span class="sidebar-text">Critical Vulnerabilities</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link metric-link" data-metric-page="mttd">
+                                            <span class="sidebar-icon">⏱️</span> <span class="sidebar-text">MTTD (Mean Time To Detect)</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link metric-link" data-metric-page="commentary">
+                                            <span class="sidebar-icon">💬</span> <span class="sidebar-text">Commentary</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link metric-link" data-metric-page="other-metrics-placeholder">
+                                            <span class="sidebar-icon">➕</span> <span class="sidebar-text">Other Metrics (Future)</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- GLOBAL DASHBOARD LINK with Nested Submenus -->
+                        <li>
+                            <a href="#" class="flex items-center py-2 px-3 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-700 sidebar-link parent-link" data-page="global-dashboard-page">
+                                <span class="sidebar-icon">🌐</span> <span class="sidebar-text">GLOBAL Dashboard</span>
+                            </a>
+                            <!-- GLOBAL Dashboard Subpages - Nested under Global Dashboard -->
+                            <div id="global-dashboard-metrics-nav" class="pl-6 pt-1 hidden">
+                                <ul class="space-y-1">
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link global-metric-link" data-global-metric-page="glob1">
+                                            <span class="sidebar-icon">📈</span> <span class="sidebar-text">Overview (G1)</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link global-metric-link" data-global-metric-page="glob2-placeholder">
+                                            <span class="sidebar-icon">🔍</span> <span class="sidebar-text">G2 (Coming Soon)</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link global-metric-link" data-global-metric-page="glob3-placeholder">
+                                            <span class="sidebar-icon">⚙️</span> <span class="sidebar-text">G3 (Coming Soon)</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a href="#" class="flex items-center py-2 px-3 rounded-lg text-gray-300 hover:bg-gray-700 text-sm font-medium sidebar-link parent-link" data-page="project2-placeholder">
+                                <span class="sidebar-icon">⚙️</span> <span class="sidebar-text">Project 2 (Future)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Top Bar - From Cyber Security Dashboard -->
+            <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center">
+                    <button id="sidebarToggle" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 mr-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h1 class="text-2xl font-semibold text-gray-800" id="dashboard-title">Integrated Dashboard - Overview</h1>
+                </div>
+                
+                <!-- User Profile and Last Refreshed Section -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-500 hidden md:block">Last Refreshed: <span id="last-refreshed">July 2, 2025, 03:00 AM EDT</span></div>
+                    
+                    <!-- User Profile Placeholder -->
+                    <div class="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors duration-200">
+                        <img class="h-8 w-8 rounded-full object-cover" src="https://via.placeholder.com/150/007bff/ffffff?text=U" alt="User Profile Picture">
+                        <span class="font-medium text-gray-700 hidden sm:block">John Doe</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area for selected subpage -->
+            <main class="flex-1 p-6 bg-gray-100 overflow-y-auto">
+
+                <!-- Cyber Security Project 1 - Main Page Container -->
+                <section id="project1-overview" class="dashboard-page hidden">
+                    <!-- This section acts as a container for Project 1's specific sub-pages -->
+                    <!-- Project 1: Key Performance Overview Subpage -->
+                    <div id="overview" class="project1-subpage">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 1: Key Performance Overview</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Metric Card 1: Critical Vulnerabilities -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-medium text-gray-800">Critical Vulnerabilities Count</h3>
+                                    <span class="text-xs font-semibold text-gray-500">Target: &lt;= 5</span>
+                                </div>
+                                <div class="flex items-end mb-4">
+                                    <p class="text-4xl font-bold text-metric-red">7</p> <!-- Example value, dynamic color -->
+                                    <div class="ml-4 flex items-center text-red-600 font-medium">
+                                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6 6"></path></svg>
+                                        <span>(+2)</span>
+                                    </div>
+                                </div>
+                                <!-- Sparkline Placeholder -->
+                                <div class="bg-gray-100 h-16 rounded-md mb-4 flex items-center justify-center text-gray-400">
+                                    Sparkline Chart Placeholder
+                                </div>
+                                <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium" data-navigate="critical-vulnerabilities">View Details</button>
+                            </div>
+
+                            <!-- Metric Card 2: Mean Time To Detect (MTTD) -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-medium text-gray-800">Mean Time To Detect (MTTD)</h3>
+                                    <span class="text-xs font-semibold text-gray-500">Target: &lt;= 24h</span>
+                                </div>
+                                <div class="flex items-end mb-4">
+                                    <p class="text-4xl font-bold text-metric-yellow">36h</p>
+                                    <div class="ml-4 flex items-center text-yellow-600 font-medium">
+                                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6 6"></path></svg>
+                                        <span>(+12h)</span>
+                                    </div>
+                                </div>
+                                <!-- Sparkline Placeholder -->
+                                <div class="bg-gray-100 h-16 rounded-md mb-4 flex items-center justify-center text-gray-400">
+                                    Sparkline Chart Placeholder
+                                </div>
+                                <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium" data-navigate="mttd">View Details</button>
+                            </div>
+
+                            <!-- Metric Card 3: Resolved Issues Rate -->
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-medium text-gray-800">Resolved Issues Rate</h3>
+                                    <span class="text-xs font-semibold text-gray-500">Target: >= 90%</span>
+                                </div>
+                                <div class="flex items-end mb-4">
+                                    <p class="text-4xl font-bold text-metric-green">95%</p>
+                                    <div class="ml-4 flex items-center text-green-600 font-medium">
+                                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                        <span>(+5%)</span>
+                                    </div>
+                                </div>
+                                <!-- Sparkline Placeholder -->
+                                <div class="bg-gray-100 h-16 rounded-md mb-4 flex items-center justify-center text-gray-400">
+                                    Sparkline Chart Placeholder
+                                </div>
+                                <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md font-medium" data-navigate="other-metrics-placeholder">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 1 - Critical Vulnerabilities Subpage -->
+                    <div id="critical-vulnerabilities" class="project1-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 1: Critical Vulnerabilities Analysis</h2>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Trend Chart: Critical Vulnerabilities</h3>
+                            <div class="h-64 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                                Large Interactive Chart Placeholder (e.g., Chart.js or ApexCharts)
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Historical Data</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-06-25</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">5</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>(0)</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-metric-green font-semibold">Good</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-06-18</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">6</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6 6"></path></svg>(+1)</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-metric-yellow font-semibold">Warning</td>
+                                        </tr>
+                                        <!-- More rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Commentary for Critical Vulnerabilities</h3>
+                            <div class="space-y-4 mb-6">
+                                <div class="bg-gray-50 p-4 rounded-md">
+                                    <p class="text-sm text-gray-800 mb-1">"The spike on 06-18 was due to a new scanner configuration. We are reviewing false positives and prioritizing. Expect reduction by end of week."</p>
+                                    <p class="text-xs text-gray-500 text-right">- John Doe, 2025-06-20</p>
+                                </div>
+                                <!-- More comments -->
+                            </div>
+                            <textarea class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-3" rows="4" placeholder="Add your commentary here..."></textarea>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium">Submit Commentary</button>
+                        </div>
+                    </div>
+
+                    <!-- Project 1 - MTTD Subpage -->
+                    <div id="mttd" class="project1-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 1: MTTD (Mean Time To Detect) Analysis</h2>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Trend Chart: MTTD</h3>
+                            <div class="h-64 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                                Large Interactive Chart Placeholder for MTTD
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Historical Data (MTTD)</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trend</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-06-25</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">28h</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6 6"></path></svg>(+4h)</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-metric-yellow font-semibold">Warning</td>
+                                        </tr>
+                                        <!-- More rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Commentary for MTTD</h3>
+                            <textarea class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-3" rows="4" placeholder="Add your commentary here..."></textarea>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium">Submit Commentary</button>
+                        </div>
+                    </div>
+
+                    <!-- Project 1 - Commentary Subpage (Overall Project Commentary) -->
+                    <div id="commentary" class="project1-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 1: Overall Project Commentary</h2>
+
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Historical Project Commentaries</h3>
+                            <div class="space-y-4">
+                                <div class="bg-gray-50 p-4 rounded-md">
+                                    <p class="text-sm text-gray-800 mb-1">"Overall performance for Q2 2025 showed improvement in vulnerability remediation efforts, though MTTD for specific high-priority incidents remains a focus area. Leadership is aware and initiatives are underway."</p>
+                                    <p class="text-xs text-gray-500 text-right">- Jane Smith, 2025-07-01</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-md">
+                                    <p class="text-sm text-gray-800 mb-1">"Initial rollout of automated detection tools has slightly increased detection times for complex threats, but this is expected during calibration. We anticipate improvements next quarter."</p>
+                                    <p class="text-xs text-gray-500 text-right">- Alex Lee, 2025-04-15</p>
+                                </div>
+                                <!-- More historical comments -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-4">Add New Project Commentary</h3>
+                            <textarea class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mb-3" rows="6" placeholder="Enter your project-level commentary here for the current period..."></textarea>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium">Submit Commentary</button>
+                        </div>
+                    </div>
+
+                    <!-- Project 1 - Placeholder for other metrics -->
+                    <div id="other-metrics-placeholder" class="project1-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 1: Other Metrics (Coming Soon)</h2>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <p class="text-gray-600">This section will contain detailed dashboards for other specific metrics as they are integrated.</p>
+                            <p class="mt-4 text-gray-500">Examples: Patch Compliance Rate, Security Incident Volume, Data Loss Prevention Alerts, etc.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cyber Security Project 2 - Placeholder -->
+                <section id="project2-placeholder" class="dashboard-page hidden">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-6">Project 2: Placeholder</h2>
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <p class="text-gray-600">This section will house the dashboard and metrics for Project 2.</p>
+                        <p class="mt-4 text-gray-500">You can imagine a similar structure to Project 1, with its own set of metric subpages.</p>
+                    </div>
+                </section>
+
+                <!-- GLOBAL Dashboard Page - Main Container -->
+                <section id="global-dashboard-page" class="dashboard-page hidden">
+                    <!-- Global Dashboard's main overview page -->
+                    <div id="glob1-page" class="global-subpage">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">GLOBAL Dashboard Overview (G1)</h2>
+                        <!-- Chart View -->
+                        <section class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-700">Application Overview Charts</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-medium mb-2 text-gray-600">Occurrences per Domain</h3>
+                                    <div class="relative h-64 overflow-x-auto">
+                                        <canvas id="domainChart"></canvas>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-medium mb-2 text-gray-600">Occurrences per App Name</h3>
+                                    <div class="relative h-64 overflow-x-auto">
+                                        <canvas id="appChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Summary Table -->
+                        <section class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-700">Summary Table</h2>
+                            <div class="flex flex-wrap items-center gap-4 mb-4">
+                                <!-- Filters -->
+                                <div class="flex items-center space-x-2">
+                                    <label for="domainFilter" class="text-gray-700">Domain:</label>
+                                    <select id="domainFilter" multiple class="form-multiselect rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 min-w-[150px]">
+                                        <!-- Options will be populated by JS -->
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="appNameFilter" class="text-gray-700">App Name:</label>
+                                    <select id="appNameFilter" multiple class="form-multiselect rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 min-w-[150px]">
+                                        <!-- Options will be populated by JS -->
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="searchFilter" class="text-gray-700">Search:</label>
+                                    <input type="text" id="searchFilter" placeholder="Search all fields..." class="form-input rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                </div>
+                                <button id="clearFiltersBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
+                                    Clear Filters
+                                </button>
+                                <button id="exportCsvBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-150">
+                                    Export CSV
+                                </button>
+                            </div>
+
+                            <!-- Table -->
+                            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200 bg-white">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">App Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Occurrences</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summaryTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Table rows will be populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div class="flex justify-between items-center mt-4">
+                                <div>
+                                    <label for="pageSize" class="text-gray-700 mr-2">Rows per page:</label>
+                                    <select id="pageSize" class="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div id="paginationControls" class="flex space-x-2">
+                                    <button id="prevPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Previous</button>
+                                    <span id="pageInfo" class="self-center text-gray-700">Page 1 of 1</span>
+                                    <button id="nextPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Details Page (Hidden by default) -->
+                    <div id="details-page" class="global-subpage hidden">
+                        <section class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 id="detailsPageTitle" class="text-xl font-semibold mb-4 text-gray-700">Details for [App Name or Domain]</h2>
+                            <button id="backToDashboardBtn" class="mb-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-150 flex items-center">
+                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                Back to Dashboard
+                            </button>
+
+                            <!-- Advanced Filters for Details Page -->
+                            <div class="flex flex-wrap items-center gap-4 mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <label for="detailsDomainFilter" class="text-gray-700">Domain:</label>
+                                    <select id="detailsDomainFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="detailsAppNameFilter" class="text-gray-700">App Name:</label>
+                                    <select id="detailsAppNameFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="detailsOwnerFilter" class="text-gray-700">Owner:</label>
+                                    <select id="detailsOwnerFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="detailsVersionFilter" class="text-gray-700">Version:</label>
+                                    <select id="detailsVersionFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <label for="detailsDeptFilter" class="text-gray-700">Dept:</label>
+                                    <select id="detailsDeptFilter" class="form-select rounded-md border-gray-300 shadow-sm min-w-[150px]">
+                                        <option value="">All</option>
+                                    </select>
+                                </div>
+                                <button id="clearDetailsFiltersBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
+                                    Clear Filters
+                                </button>
+                                <button id="exportDetailsCsvBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-150">
+                                    Export CSV
+                                </button>
+                            </div>
+
+                            <!-- Full Table View for Details Page -->
+                            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                                <table class="min-w-full divide-y divide-gray-200 bg-white">
+                                    <thead id="detailsTableHeader" class="bg-gray-50">
+                                        <!-- Table headers will be populated dynamically by JS -->
+                                    </thead>
+                                    <tbody id="detailsTableBody" class="bg-white divide-y divide-gray-200">
+                                        <!-- Details table rows will be populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Details Pagination -->
+                            <div class="flex justify-between items-center mt-4">
+                                <div>
+                                    <label for="detailsPageSize" class="text-gray-700 mr-2">Rows per page:</label>
+                                    <select id="detailsPageSize" class="form-select rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div id="detailsPaginationControls" class="flex space-x-2">
+                                    <button id="detailsPrevPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Previous</button>
+                                    <span id="detailsPageInfo" class="self-center text-gray-700">Page 1 of 1</span>
+                                    <button id="detailsNextPageBtn" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Next</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    <!-- Placeholder for other Global sub-pages (e.g., G5, G60, G66) -->
+                    <div id="glob2-placeholder" class="global-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">GLOBAL Dashboard: G2 (Coming Soon)</h2>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <p class="text-gray-600">This section will contain detailed content for Global Metric 2.</p>
+                        </div>
+                    </div>
+                    <div id="glob3-placeholder" class="global-subpage hidden">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">GLOBAL Dashboard: G3 (Coming Soon)</h2>
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <p class="text-gray-600">This section will contain detailed content for Global Metric 3.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Comment Modal - From GLOBAL Dashboard, moved outside main content -->
+    <div id="commentModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h3 class="text-xl font-semibold mb-4">Add/Edit Comment</h3>
+            <textarea id="commentTextarea" class="w-full p-2 border border-gray-300 rounded-md h-32 mb-4 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter your comment here..."></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="saveCommentBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition duration-150">Save Comment</button>
+                <button id="cancelCommentBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Cyber Security Dashboard's original JS setup ---
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const dashboardTitle = document.getElementById('dashboard-title');
+        const parentLinks = document.querySelectorAll('.sidebar-link.parent-link'); // Selects only top-level project links
+        const metricLinks = document.querySelectorAll('.sidebar-link.metric-link'); // Selects Project 1 sub-metric links
+        const globalMetricLinks = document.querySelectorAll('.sidebar-link.global-metric-link'); // Selects GLOBAL Dashboard sub-metric links
+        const dashboardPages = document.querySelectorAll('.dashboard-page'); // Main content sections
+
+        // Get the nested navigation containers - MOVED INSIDE DOMContentLoaded
+        let project1MetricsNav;
+        let globalDashboardMetricsNav;
+
+        let isSidebarOpen = false; // Track sidebar state
+
+        // Function to update the dashboard title based on the active page
+        function updateDashboardTitle(mainPageId, subPageId = '') {
+            let titleText = 'Integrated Dashboard';
+            switch (mainPageId) {
+                case 'project1-overview':
+                    titleText = 'Cyber Security Issues Dashboard';
+                    switch(subPageId) {
+                        case 'overview': titleText += ' - Overview (Project 1)'; break;
+                        case 'critical-vulnerabilities': titleText += ' - Critical Vulnerabilities (Project 1)'; break;
+                        case 'mttd': titleText += ' - MTTD (Project 1)'; break;
+                        case 'commentary': titleText += ' - Overall Commentary (Project 1)'; break;
+                        case 'other-metrics-placeholder': titleText += ' - Other Metrics (Project 1)'; break;
+                        default: titleText += ' - Overview (Project 1)'; // Fallback
+                    }
+                    break;
+                case 'project2-placeholder':
+                    titleText = 'Cyber Security Issues Dashboard - Project 2';
+                    break;
+                case 'global-dashboard-page':
+                    titleText = 'GLOBAL Dashboard';
+                    switch(subPageId) {
+                        case 'glob1': titleText += ' - Overview (G1)'; break;
+                        case 'details': titleText += ' - Details'; break; // Details is a sub-page of glob1
+                        case 'glob2-placeholder': titleText += ' - G2 (Coming Soon)'; break;
+                        case 'glob3-placeholder': titleText += ' - G3 (Coming Soon)'; break;
+                        default: titleText += ' - Overview (G1)'; // Fallback for global
+                    }
+                    break;
+                default:
+                    titleText = 'Integrated Dashboard - Unknown Page';
+            }
+            dashboardTitle.textContent = titleText;
+        }
+
+        // Function to show a specific dashboard page (main sections)
+        function showPage(mainPageId, subPageId = '') {
+            // Hide all main dashboard pages first
+            dashboardPages.forEach(page => {
+                page.classList.add('hidden');
+            });
+
+            // Show the selected main dashboard page
+            document.getElementById(mainPageId).classList.remove('hidden');
+
+            // Handle visibility of nested navigation sections
+            // Ensure these elements are not null before trying to access classList
+            if (project1MetricsNav) project1MetricsNav.classList.add('hidden');
+            if (globalDashboardMetricsNav) globalDashboardMetricsNav.classList.add('hidden');
+
+            // Only show nested menus if the sidebar is NOT collapsed
+            if (!sidebar.classList.contains('collapsed')) {
+                if (mainPageId === 'project1-overview') {
+                    if (project1MetricsNav) project1MetricsNav.classList.remove('hidden');
+                    // Hide all Project 1 sub-pages, then show the specific one
+                    document.getElementById('project1-overview').querySelectorAll('.project1-subpage').forEach(subPage => {
+                        subPage.classList.add('hidden');
+                    });
+                    document.getElementById(subPageId).classList.remove('hidden');
+                } else if (mainPageId === 'global-dashboard-page') {
+                    if (globalDashboardMetricsNav) globalDashboardMetricsNav.classList.remove('hidden');
+                    // Hide all Global Dashboard sub-pages, then show the specific one
+                    document.getElementById('global-dashboard-page').querySelectorAll('.global-subpage').forEach(subPage => {
+                        subPage.classList.add('hidden');
+                    });
+                    document.getElementById(subPageId).classList.remove('hidden');
+                }
+            }
+
+
+            updateDashboardTitle(mainPageId, subPageId);
+        }
+
+        // Sidebar Toggle Functionality
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+
+            if (sidebar.classList.contains('collapsed')) {
+                // If sidebar is collapsed, hide all nested menus
+                if (project1MetricsNav) project1MetricsNav.classList.add('hidden');
+                if (globalDashboardMetricsNav) globalDashboardMetricsNav.classList.add('hidden');
+            } else {
+                // If sidebar is expanded, show the relevant nested menu based on the active parent link
+                const activeParentLink = document.querySelector('.sidebar-link.parent-link.active');
+                if (activeParentLink) {
+                    const mainPageId = activeParentLink.dataset.page;
+                    let subPageId = '';
+
+                    // Find the active sub-link within the active parent's menu
+                    if (mainPageId === 'project1-overview') {
+                        const activeMetricLink = document.querySelector('.metric-link.active');
+                        if (activeMetricLink) {
+                            subPageId = activeMetricLink.dataset.metricPage;
+                        } else {
+                            subPageId = 'overview'; // Default for Project 1
+                        }
+                    } else if (mainPageId === 'global-dashboard-page') {
+                        const activeGlobalMetricLink = document.querySelector('.global-metric-link.active');
+                        if (activeGlobalMetricLink) {
+                            subPageId = activeGlobalMetricLink.dataset.globalMetricPage;
+                        } else {
+                            subPageId = 'glob1'; // Default for Global Dashboard
+                        }
+                    }
+                    // Call showPage to correctly display the main content and its nested menu
+                    showPage(mainPageId, subPageId || mainPageId); // Pass mainPageId as fallback for subPageId
+                }
+            }
+        });
+
+        // Project Navigation Functionality (Level 1 navigation)
+        parentLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const mainPageId = link.dataset.page;
+
+                // Remove active class from all parent links
+                parentLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                // Remove active class from all nested metric links (both Project 1 and Global)
+                metricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                globalMetricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+
+                // Add active class to clicked parent link
+                link.classList.add('active', 'bg-gray-700', 'text-blue-400');
+                link.classList.remove('text-gray-300');
+
+                // Determine which sub-page to show by default for the selected main project
+                let defaultSubPageId = '';
+                if (mainPageId === 'project1-overview') {
+                    defaultSubPageId = 'overview';
+                    // Also activate the 'Overview' metric link if Project 1 is selected
+                    document.querySelector('.metric-link[data-metric-page="overview"]').classList.add('active', 'bg-gray-700', 'text-blue-400');
+                    document.querySelector('.metric-link[data-metric-page="overview"]').classList.remove('text-gray-300');
+                } else if (mainPageId === 'global-dashboard-page') {
+                    defaultSubPageId = 'glob1'; // Default for GLOBAL Dashboard is its 'glob1' page
+                    // Also activate the 'Overview (G1)' global metric link
+                    document.querySelector('.global-metric-link[data-global-metric-page="glob1"]').classList.add('active', 'bg-gray-700', 'text-blue-400');
+                    document.querySelector('.global-metric-link[data-global-metric-page="glob1"]').classList.remove('text-gray-300');
+                } else {
+                    defaultSubPageId = mainPageId; // For placeholders like project2-placeholder
+                }
+                showPage(mainPageId, defaultSubPageId);
+            });
+        });
+
+        // Metric Navigation Functionality (Level 2 navigation for Project 1)
+        metricLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const subPageId = link.dataset.metricPage;
+
+                // Ensure Project 1 main link is active
+                parentLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                document.querySelector('.parent-link[data-page="project1-overview"]').classList.add('active', 'bg-gray-700', 'text-blue-400');
+                document.querySelector('.parent-link[data-page="project1-overview"]').classList.remove('text-gray-300');
+
+                // Remove active class from all Project 1 metric sub-links
+                metricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                // Ensure global metric links are deactivated
+                globalMetricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+
+
+                // Add active class to clicked metric sub-link
+                link.classList.add('active', 'bg-gray-700', 'text-blue-400');
+                link.classList.remove('text-gray-300');
+
+                showPage('project1-overview', subPageId); // Show the main project1-overview page, then its sub-page
+            });
+        });
+
+        // Global Metric Navigation Functionality (Level 2 navigation for GLOBAL Dashboard)
+        globalMetricLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const subPageId = link.dataset.globalMetricPage;
+
+                // Ensure GLOBAL Dashboard main link is active
+                parentLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                document.querySelector('.parent-link[data-page="global-dashboard-page"]').classList.add('active', 'bg-gray-700', 'text-blue-400');
+                document.querySelector('.parent-link[data-page="global-dashboard-page"]').classList.remove('text-gray-300');
+
+                // Remove active class from all GLOBAL metric sub-links
+                globalMetricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+                // Ensure Project 1 metric links are deactivated
+                metricLinks.forEach(l => {
+                    l.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    l.classList.add('text-gray-300');
+                });
+
+
+                // Add active class to clicked global metric sub-link
+                link.classList.add('active', 'bg-gray-700', 'text-blue-400');
+                link.classList.remove('text-gray-300');
+
+                showPage('global-dashboard-page', subPageId); // Show the main global-dashboard-page, then its sub-page
+            });
+        });
+
+
+        // "View Details" buttons on Project 1 Overview page
+        const csViewDetailsButtons = document.querySelectorAll('[data-navigate]');
+        csViewDetailsButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetPage = button.dataset.navigate;
+                showPage('project1-overview', targetPage);
+
+                // Update active state in sidebar navigation for metric links
+                metricLinks.forEach(link => {
+                    link.classList.remove('active', 'bg-gray-700', 'text-blue-400');
+                    link.classList.add('text-gray-300');
+                    if (link.dataset.metricPage === targetPage) {
+                        link.classList.add('active', 'bg-gray-700', 'text-blue-400');
+                        link.classList.remove('text-gray-300');
+                    }
+                });
+            });
+        });
+
+        // --- GLOBAL Dashboard's original JS setup, adapted ---
+
+        // Data generation and global variables
+        const sampleDomains = ["Finance", "IT", "HR", "Sales", "Marketing", "Operations", "R&D", "Legal"];
+        const sampleAppNames = [
+            "Enterprise Financial System with Very Long Name",
+            "CloudOps Portal",
+            "HR Management Suite",
+            "Customer Relationship Manager",
+            "Marketing Automation Platform",
+            "Supply Chain Optimizer",
+            "Research Data Platform",
+            "Legal Document Workflow",
+            "Project Management Tool",
+            "Internal Communication Hub",
+            "Data Analytics Dashboard",
+            "Security Monitoring System",
+            "Product Lifecycle Management",
+            "Quality Control Application",
+            "Fleet Management Solution",
+            "E-commerce Frontend",
+            "Inventory Tracking System",
+            "Point of Sale System",
+            "Business Intelligence Tool",
+            "Compliance Reporting Software"
+        ];
+        const sampleOwners = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Williams", "Charlie Brown", "Diana Prince", "Clark Kent", "Bruce Wayne"];
+        const sampleVersions = ["1.0.0", "1.0.1", "1.0.2", "1.0.3", "2.0.0", "2.1.0", "3.0.0"];
+        const sampleDepts = ["Finance Group F1", "IT Infra", "HR Talent", "Sales East", "Marketing Digital", "Ops Logistics", "R&D Core", "Legal Compliance", "Project Mgmt Office"];
+
+        let dashboardData = []; // Full dataset
+        let comments = JSON.parse(localStorage.getItem('dashboardComments')) || {}; // Load comments from local storage
+
+        const fetchDataFromServer = async () => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate server response with 2000 entries
+                    const serverRawData = [];
+                    for (let i = 0; i < 2000; i++) {
+                        serverRawData.push({
+                            DOMAIN: sampleDomains[Math.floor(Math.random() * sampleDomains.length)],
+                            "APP NAME": sampleAppNames[Math.floor(Math.random() * sampleAppNames.length)],
+                            OWNER: sampleOwners[Math.floor(Math.random() * sampleOwners.length)],
+                            VERSION: sampleVersions[Math.floor(Math.random() * sampleVersions.length)],
+                            DEPT: sampleDepts[Math.floor(Math.random() * sampleDepts.length)]
+                        });
+                    }
+                    resolve(serverRawData);
+                }, 500); // Simulate network delay
+            });
+        };
+
+        // Global state for filtering and pagination (GLOBAL Dashboard specific)
+        let currentGlob1Filters = {
+            domain: [],
+            appName: [],
+            search: ''
+        };
+        let currentDetailsFilters = {
+            domain: '',
+            appName: '',
+            owner: '',
+            version: '',
+            dept: ''
+        };
+        let currentDetailsData = []; // Data specific to the details page
+        let currentEditItemId = null; // Used for comment modal
+        let currentPage = 1; // For summary table
+        let pageSize = 25; // For summary table
+        let detailsCurrentPage = 1; // For details table
+        let detailsPageSize = 25; // For details table
+
+        // Chart instances
+        let domainChartInstance = null;
+        let appChartInstance = null;
+
+        // DOM Elements for GLOBAL Dashboard - Will be initialized in initGlob1Page/initDetailsPage
+        let glob1Page;
+        let detailsPage;
+        let domainChartCanvas;
+        let appChartCanvas;
+        let summaryTableBody;
+        let domainFilterSelect;
+        let appNameFilterSelect;
+        let searchFilterInput;
+        let clearFiltersBtn;
+        let exportCsvBtn;
+        let pageSizeSelect;
+        let prevPageBtn;
+        let nextPageBtn;
+        let pageInfoSpan;
+        let backToDashboardBtn;
+        let detailsPageTitle;
+        let detailsTableHeader;
+        let detailsTableBody;
+        let detailsDomainFilter;
+        let detailsAppNameFilter;
+        let detailsOwnerFilter;
+        let detailsVersionFilter;
+        let detailsDeptFilter;
+        let clearDetailsFiltersBtn;
+        let exportDetailsCsvBtn;
+        let detailsPageSizeSelect;
+        let detailsPrevPageBtn;
+        let detailsNextPageBtn;
+        let detailsPageInfoSpan;
+        let commentModal;
+        let closeModalBtn;
+        let commentTextarea;
+        let saveCommentBtn;
+        let cancelCommentBtn;
+
+
+        // --- Utility Functions (from GLOBAL Dashboard) ---
+        const getTruncatedTextHtml = (text, maxLength) => {
+            if (text.length > maxLength) {
+                return `<span class="truncate-text" title="${text}">${text.substring(0, maxLength)}...</span>`;
+            }
+            return text;
+        };
+
+        const exportTableToCSV = (data, filename, headers = []) => {
+            if (!data || data.length === 0) {
+                console.warn("No data to export.");
+                return;
+            }
+
+            const actualHeaders = headers.length > 0 ? headers : Object.keys(data[0]);
+            let csvContent = actualHeaders.map(header => `"${header}"`).join(",") + "\n";
+
+            data.forEach(row => {
+                let rowContent = actualHeaders.map(header => {
+                    const value = row[header] !== undefined && row[header] !== null ? String(row[header]) : '';
+                    return `"${value.replace(/"/g, '""')}"`;
+                }).join(",");
+                csvContent += rowContent + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        // --- Core Rendering Functions (from GLOBAL Dashboard) ---
+        const renderCharts = (data) => {
+            const domainCounts = {};
+            const appCounts = {};
+            data.forEach(item => {
+                domainCounts[item.DOMAIN] = (domainCounts[item.DOMAIN] || 0) + 1;
+                appCounts[item["APP NAME"]] = (appCounts[item["APP NAME"]] || 0) + 1;
+            });
+
+            const sortedAppCounts = Object.entries(appCounts).sort(([,a],[,b]) => b-a);
+            const topNApps = sortedAppCounts.slice(0, 20);
+
+            const domainLabels = Object.keys(domainCounts);
+            const domainData = Object.values(domainCounts);
+
+            if (domainChartInstance) domainChartInstance.destroy();
+            if (appChartInstance) appChartInstance.destroy();
+
+            domainChartInstance = new Chart(domainChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: domainLabels,
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: domainData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.x !== null) { label += context.parsed.x; }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 20 ? label.substring(0, 20) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const domain = domainLabels[clickedIndex];
+                            navigateToDetails({ domain: domain });
+                        }
+                    }
+                }
+            });
+
+            const appLabels = topNApps.map(item => item[0]);
+            const appData = topNApps.map(item => item[1]);
+            appChartInstance = new Chart(appChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: appLabels,
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: appData,
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.x !== null) { label += context.parsed.x; }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 20 ? label.substring(0, 20) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const clickedIndex = elements[0].index;
+                            const appName = appLabels[clickedIndex];
+                            navigateToDetails({ appName: appName });
+                        }
+                    }
+                }
+            });
+        };
+
+        const renderSummaryTable = (data) => {
+            const aggregatedData = {};
+            data.forEach((item, index) => {
+                // Assign a unique ID if not already present
+                if (!item.id) item.id = `record-${index}`;
+                const key = `${item.DOMAIN}|${item["APP NAME"]}`;
+                if (!aggregatedData[key]) {
+                    aggregatedData[key] = {
+                        DOMAIN: item.DOMAIN,
+                        "APP NAME": item["APP NAME"],
+                        Occurrences: 0,
+                        ids: []
+                    };
+                }
+                aggregatedData[key].Occurrences++;
+                aggregatedData[key].ids.push(item.id);
+            });
+
+            let filteredData = Object.values(aggregatedData);
+
+            if (currentGlob1Filters.domain.length > 0) {
+                filteredData = filteredData.filter(item => currentGlob1Filters.domain.includes(item.DOMAIN));
+            }
+            if (currentGlob1Filters.appName.length > 0) {
+                filteredData = filteredData.filter(item => currentGlob1Filters.appName.includes(item["APP NAME"]));
+            }
+            if (currentGlob1Filters.search) {
+                const searchTerm = currentGlob1Filters.search.toLowerCase();
+                filteredData = filteredData.filter(item =>
+                    item.DOMAIN.toLowerCase().includes(searchTerm) ||
+                    item["APP NAME"].toLowerCase().includes(searchTerm) ||
+                    String(item.Occurrences).toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by occurrences descending by default
+            filteredData.sort((a, b) => b.Occurrences - a.Occurrences);
+
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const paginatedData = filteredData.slice(start, end);
+
+            summaryTableBody.innerHTML = '';
+            paginatedData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 cursor-pointer';
+                row.setAttribute('data-domain', item.DOMAIN);
+                row.setAttribute('data-appname', item["APP NAME"]);
+                row.setAttribute('data-ids', JSON.stringify(item.ids)); // Store IDs for drilling down
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTruncatedTextHtml(item.DOMAIN, 30)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTruncatedTextHtml(item["APP NAME"], 30)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.Occurrences}</td>
+                `;
+                row.addEventListener('click', () => navigateToDetails({ domain: item.DOMAIN, appName: item["APP NAME"] }));
+                summaryTableBody.appendChild(row);
+            });
+            updateGlob1Pagination(filteredData.length);
+        };
+
+        const renderDetailsTable = (data) => {
+            currentDetailsData = data; // Store original filtered data for details page pagination/export
+
+            // Get unique headers, maintaining order
+            const headers = data.length > 0 ? Object.keys(data[0]) : [];
+            const headerRow = document.createElement('tr');
+            detailsTableHeader.innerHTML = ''; // Clear previous headers
+            headerRow.innerHTML = headers.map(header => `
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${header}</th>
+            `).join('');
+            headerRow.innerHTML += `
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            `;
+            detailsTableHeader.appendChild(headerRow);
+
+            const totalPages = Math.ceil(data.length / detailsPageSize);
+            const start = (detailsCurrentPage - 1) * detailsPageSize;
+            const end = start + detailsPageSize;
+            const paginatedData = data.slice(start, end);
+
+            detailsTableBody.innerHTML = '';
+            if (paginatedData.length === 0) {
+                detailsTableBody.innerHTML = `<tr><td colspan="${headers.length + 2}" class="px-6 py-4 text-center text-gray-500">No data found for these filters.</td></tr>`;
+                updateDetailsPagination(0);
+                return;
+            }
+
+            paginatedData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                const itemId = `${item.DOMAIN}-${item["APP NAME"]}-${item.OWNER}-${item.VERSION}-${item.DEPT}`; // Unique ID for comment
+                const commentText = comments[itemId] || '';
+                const commentDisplay = getTruncatedTextHtml(commentText, 40);
+
+                row.innerHTML = headers.map(header => `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${getTruncatedTextHtml(item[header] || '', 30)}</td>
+                `).join('');
+
+                row.innerHTML += `
+                    <td class="px-6 py-4 text-sm text-gray-900 relative">
+                        <span class="block truncate-text w-48" title="${commentText}">${commentDisplay}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 edit-comment-btn" data-item-id="${itemId}" data-comment="${commentText}">
+                            ${commentText ? 'Edit Comment' : 'Add Comment'}
+                        </button>
+                    </td>
+                `;
+                detailsTableBody.appendChild(row);
+            });
+            updateDetailsPagination(data.length);
+
+            // Add event listeners for edit comment buttons
+            document.querySelectorAll('.edit-comment-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const itemId = e.target.dataset.itemId;
+                    const existingComment = e.target.dataset.comment || '';
+                    showCommentModal(itemId, existingComment);
+                });
+            });
+        };
+
+        const populateFilterOptions = () => {
+            const domains = [...new Set(dashboardData.map(item => item.DOMAIN))];
+            const appNames = [...new Set(dashboardData.map(item => item["APP NAME"]))];
+            const owners = [...new Set(dashboardData.map(item => item.OWNER))];
+            const versions = [...new Set(dashboardData.map(item => item.VERSION))];
+            const depts = [...new Set(dashboardData.map(item => item.DEPT))];
+
+            // Glob1 filters
+            domainFilterSelect.innerHTML = domains.map(d => `<option value="${d}">${d}</option>`).join('');
+            appNameFilterSelect.innerHTML = appNames.map(a => `<option value="${a}">${a}</option>`).join('');
+
+            // Details filters (single select)
+            detailsDomainFilter.innerHTML = '<option value="">All</option>' + domains.map(d => `<option value="${d}">${d}</option>`).join('');
+            detailsAppNameFilter.innerHTML = '<option value="">All</option>' + appNames.map(a => `<option value="${a}">${a}</option>`).join('');
+            detailsOwnerFilter.innerHTML = '<option value="">All</option>' + owners.map(o => `<option value="${o}">${o}</option>`).join('');
+            detailsVersionFilter.innerHTML = '<option value="">All</option>' + versions.map(v => `<option value="${v}">${v}</option>`).join('');
+            detailsDeptFilter.innerHTML = '<option value="">All</option>' + depts.map(d => `<option value="${d}">${d}</option>`).join('');
+        };
+
+        const applyGlob1Filters = () => {
+            currentPage = 1; // Reset to first page on filter change
+            const filtered = dashboardData.filter(item => {
+                const domainMatch = currentGlob1Filters.domain.length === 0 || currentGlob1Filters.domain.includes(item.DOMAIN);
+                const appNameMatch = currentGlob1Filters.appName.length === 0 || currentGlob1Filters.appName.includes(item["APP NAME"]);
+                const searchMatch = !currentGlob1Filters.search ||
+                                    Object.values(item).some(val =>
+                                        String(val).toLowerCase().includes(currentGlob1Filters.search.toLowerCase())
+                                    );
+                return domainMatch && appNameMatch && searchMatch;
+            });
+            renderCharts(filtered);
+            renderSummaryTable(filtered);
+        };
+
+        const updateGlob1Pagination = (totalItems) => {
+            const totalPages = Math.ceil(totalItems / pageSize);
+            pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages || totalItems === 0;
+        };
+
+        const applyDetailsFilters = () => {
+            detailsCurrentPage = 1; // Reset to first page on filter change
+
+            let filteredData = dashboardData.filter(item => {
+                const domainMatch = !currentDetailsFilters.domain || item.DOMAIN === currentDetailsFilters.domain;
+                const appNameMatch = !currentDetailsFilters.appName || item["APP NAME"] === currentDetailsFilters.appName;
+                const ownerMatch = !currentDetailsFilters.owner || item.OWNER === currentDetailsFilters.owner;
+                const versionMatch = !currentDetailsFilters.version || item.VERSION === currentDetailsFilters.version;
+                const deptMatch = !currentDetailsFilters.dept || item.DEPT === currentDetailsFilters.dept;
+                return domainMatch && appNameMatch && ownerMatch && versionMatch && deptMatch;
+            });
+
+            // Ensure details page title reflects active filters
+            let titleParts = [];
+            if (currentDetailsFilters.appName) titleParts.push(currentDetailsFilters.appName);
+            if (currentDetailsFilters.domain && !currentDetailsFilters.appName) titleParts.push(currentDetailsFilters.domain);
+            detailsPageTitle.textContent = `Details for ${titleParts.length > 0 ? titleParts.join(' / ') : 'All Applications'}`;
+
+            renderDetailsTable(filteredData);
+        };
+
+        const updateDetailsPagination = (totalItems) => {
+            const totalPages = Math.ceil(totalItems / detailsPageSize);
+            detailsPageInfoSpan.textContent = `Page ${detailsCurrentPage} of ${totalPages || 1}`;
+            detailsPrevPageBtn.disabled = detailsCurrentPage === 1;
+            detailsNextPageBtn.disabled = detailsCurrentPage === totalPages || totalItems === 0;
+        };
+
+        const showCommentModal = (itemId, existingComment) => {
+            currentEditItemId = itemId;
+            commentTextarea.value = existingComment;
+            commentModal.classList.remove('hidden');
+        };
+
+        // --- Navigation for GLOBAL Dashboard internal pages ---
+        const navigateToDetails = (filters = {}) => {
+            // Update global details filters
+            currentDetailsFilters = { ...currentDetailsFilters, ...filters };
+            detailsCurrentPage = 1; // Reset pagination for details view
+
+            showPage('global-dashboard-page', 'details'); // Show the global dashboard main page, then its details sub-page
+
+            // Set filter dropdowns to initial values based on navigation filters
+            detailsDomainFilter.value = currentDetailsFilters.domain || '';
+            detailsAppNameFilter.value = currentDetailsFilters.appName || '';
+            detailsOwnerFilter.value = currentDetailsFilters.owner || '';
+            detailsVersionFilter.value = currentDetailsFilters.version || '';
+            detailsDeptFilter.value = currentDetailsFilters.dept || '';
+
+            applyDetailsFilters(); // Apply filters and render the table
+        };
+
+        const backToDashboard = () => {
+            // Reset details filters to allow a fresh start if user navigates back and forth
+            currentDetailsFilters = {
+                domain: '',
+                appName: '',
+                owner: '',
+                version: '',
+                dept: ''
+            };
+            showPage('global-dashboard-page', 'glob1'); // Go back to the main Global Dashboard overview
+            applyGlob1Filters(); // Re-render charts and summary table for glob1
+        };
+
+
+        // --- Initialization Functions (from GLOBAL Dashboard) ---
+        const initGlob1Page = () => {
+            // Assign DOM elements for Glob1
+            domainChartCanvas = document.getElementById('domainChart');
+            appChartCanvas = document.getElementById('appChart');
+            summaryTableBody = document.getElementById('summaryTableBody');
+            domainFilterSelect = document.getElementById('domainFilter');
+            appNameFilterSelect = document.getElementById('appNameFilter');
+            searchFilterInput = document.getElementById('searchFilter');
+            clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            exportCsvBtn = document.getElementById('exportCsvBtn');
+            pageSizeSelect = document.getElementById('pageSize');
+            prevPageBtn = document.getElementById('prevPageBtn');
+            nextPageBtn = document.getElementById('nextPageBtn');
+            pageInfoSpan = document.getElementById('pageInfo');
+
+            // Event Listeners for Glob1
+            domainFilterSelect.addEventListener('change', (e) => {
+                currentGlob1Filters.domain = Array.from(e.target.selectedOptions).map(option => option.value);
+                applyGlob1Filters();
+            });
+            appNameFilterSelect.addEventListener('change', (e) => {
+                currentGlob1Filters.appName = Array.from(e.target.selectedOptions).map(option => option.value);
+                applyGlob1Filters();
+            });
+            searchFilterInput.addEventListener('input', (e) => {
+                currentGlob1Filters.search = e.target.value;
+                applyGlob1Filters();
+            });
+            clearFiltersBtn.addEventListener('click', () => {
+                currentGlob1Filters = { domain: [], appName: [], search: '' };
+                domainFilterSelect.value = []; // Reset multi-selects
+                appNameFilterSelect.value = [];
+                searchFilterInput.value = '';
+                applyGlob1Filters();
+            });
+            exportCsvBtn.addEventListener('click', () => {
+                const aggregatedData = {}; // Re-aggregate based on current filtered data
+                dashboardData.filter(item => { // Apply current Glob1 filters to get the data for export
+                    const domainMatch = currentGlob1Filters.domain.length === 0 || currentGlob1Filters.domain.includes(item.DOMAIN);
+                    const appNameMatch = currentGlob1Filters.appName.length === 0 || currentGlob1Filters.appName.includes(item["APP NAME"]);
+                    const searchMatch = !currentGlob1Filters.search ||
+                                        Object.values(item).some(val =>
+                                            String(val).toLowerCase().includes(currentGlob1Filters.search.toLowerCase())
+                                        );
+                    return domainMatch && appNameMatch && searchMatch;
+                }).forEach(item => {
+                    const key = `${item.DOMAIN}|${item["APP NAME"]}`;
+                    if (!aggregatedData[key]) {
+                        aggregatedData[key] = {
+                            DOMAIN: item.DOMAIN,
+                            "APP NAME": item["APP NAME"],
+                            Occurrences: 0
+                        };
+                    }
+                    aggregatedData[key].Occurrences++;
+                });
+                exportTableToCSV(Object.values(aggregatedData), 'global_dashboard_summary.csv', ["DOMAIN", "APP NAME", "Occurrences"]);
+            });
+
+            pageSizeSelect.addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                applyGlob1Filters();
+            });
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    applyGlob1Filters();
+                }
+            });
+            nextPageBtn.addEventListener('click', () => {
+                currentPage++;
+                applyGlob1Filters();
+            });
+        };
+
+        const initDetailsPage = () => {
+            // Assign DOM elements for Details page
+            backToDashboardBtn = document.getElementById('backToDashboardBtn');
+            detailsPageTitle = document.getElementById('detailsPageTitle');
+            detailsTableHeader = document.getElementById('detailsTableHeader');
+            detailsTableBody = document.getElementById('detailsTableBody');
+            detailsDomainFilter = document.getElementById('detailsDomainFilter');
+            detailsAppNameFilter = document.getElementById('detailsAppNameFilter');
+            detailsOwnerFilter = document.getElementById('detailsOwnerFilter');
+            detailsVersionFilter = document.getElementById('detailsVersionFilter');
+            detailsDeptFilter = document.getElementById('detailsDeptFilter');
+            clearDetailsFiltersBtn = document.getElementById('clearDetailsFiltersBtn');
+            exportDetailsCsvBtn = document.getElementById('exportDetailsCsvBtn');
+            detailsPageSizeSelect = document.getElementById('detailsPageSize');
+            detailsPrevPageBtn = document.getElementById('detailsPrevPageBtn');
+            detailsNextPageBtn = document.getElementById('detailsNextPageBtn');
+            detailsPageInfoSpan = document.getElementById('detailsPageInfo');
+
+            // Assign DOM elements for Comment Modal
+            commentModal = document.getElementById('commentModal');
+            closeModalBtn = document.getElementById('closeModalBtn');
+            commentTextarea = document.getElementById('commentTextarea');
+            saveCommentBtn = document.getElementById('saveCommentBtn');
+            cancelCommentBtn = document.getElementById('cancelCommentBtn');
+
+
+            // Event Listeners for Details page
+            backToDashboardBtn.addEventListener('click', backToDashboard);
+            detailsDomainFilter.addEventListener('change', (e) => { currentDetailsFilters.domain = e.target.value; applyDetailsFilters(); });
+            detailsAppNameFilter.addEventListener('change', (e) => { currentDetailsFilters.appName = e.target.value; applyDetailsFilters(); });
+            detailsOwnerFilter.addEventListener('change', (e) => { currentDetailsFilters.owner = e.target.value; applyDetailsFilters(); });
+            detailsVersionFilter.addEventListener('change', (e) => { currentDetailsFilters.version = e.target.value; applyDetailsFilters(); });
+            detailsDeptFilter.addEventListener('change', (e) => { currentDetailsFilters.dept = e.target.value; applyDetailsFilters(); });
+
+            clearDetailsFiltersBtn.addEventListener('click', () => {
+                currentDetailsFilters = { domain: '', appName: '', owner: '', version: '', dept: '' };
+                detailsDomainFilter.value = '';
+                detailsAppNameFilter.value = '';
+                detailsOwnerFilter.value = '';
+                detailsVersionFilter.value = '';
+                detailsDeptFilter.value = '';
+                applyDetailsFilters();
+            });
+
+            exportDetailsCsvBtn.addEventListener('click', () => {
+                // Ensure currentDetailsData is the filtered data already
+                const headersToExport = ["DOMAIN", "APP NAME", "OWNER", "VERSION", "DEPT"]; // Define the order and selection of headers
+                exportTableToCSV(currentDetailsData, 'global_dashboard_details.csv', headersToExport);
+            });
+
+            detailsPageSizeSelect.addEventListener('change', (e) => {
+                detailsPageSize = parseInt(e.target.value);
+                detailsCurrentPage = 1;
+                applyDetailsFilters();
+            });
+            detailsPrevPageBtn.addEventListener('click', () => {
+                if (detailsCurrentPage > 1) {
+                    detailsCurrentPage--;
+                    applyDetailsFilters();
+                }
+            });
+            detailsNextPageBtn.addEventListener('click', () => {
+                detailsCurrentPage++;
+                applyDetailsFilters();
+            });
+
+            // Comment Modal Event Listeners
+            closeModalBtn.addEventListener('click', () => commentModal.classList.add('hidden'));
+            cancelCommentBtn.addEventListener('click', () => commentModal.classList.add('hidden'));
+            saveCommentBtn.addEventListener('click', () => {
+                if (currentEditItemId) {
+                    comments[currentEditItemId] = commentTextarea.value;
+                    localStorage.setItem('dashboardComments', JSON.stringify(comments));
+                    commentModal.classList.add('hidden');
+                    applyDetailsFilters(); // Re-render details table to show new comment
+                }
+            });
+            commentModal.addEventListener('click', (e) => {
+                if (e.target === commentModal) {
+                    commentModal.classList.add('hidden');
+                }
+            });
+        };
+
+
+        // --- Overall Dashboard Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize elements for both dashboards
+            initGlob1Page();
+            initDetailsPage(); // Make sure modal elements and details page elements are assigned
+
+            // Assign nested navigation elements after DOM is loaded
+            project1MetricsNav = document.getElementById('project1-metrics-nav');
+            globalDashboardMetricsNav = document.getElementById('global-dashboard-metrics-nav');
+
+            // Fetch data (common for both dashboards if needed, or specific parts)
+            const rawData = await fetchDataFromServer();
+            // Assign a unique ID to each record for comment tracking
+            dashboardData = rawData.map((item, index) => ({ ...item, id: `record-${index}` }));
+
+            // Initialize Cyber Security Dashboard to show Project 1 Overview by default
+            showPage('project1-overview', 'overview'); // Explicitly set initial state
+        });
+
+    </script>
+</body>
+</html>
